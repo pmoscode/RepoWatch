@@ -2,7 +2,7 @@ import DesignSystem
 import Domain
 import SwiftUI
 
-/// Inhalt des Menüleisten-Panels. Phase 0: Bestand als einfache Liste.
+/// Inhalt des Menüleisten-Panels: Anmeldung oder Bestand als einfache Liste.
 public struct PanelRootView: View {
     private let model: AppModel
     private let onQuit: () -> Void
@@ -14,10 +14,15 @@ public struct PanelRootView: View {
 
     public var body: some View {
         VStack(spacing: 0) {
-            header
-            Divider()
-            content
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            if model.isSignedIn {
+                header
+                Divider()
+                content
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                SignInView(model: model)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
             Divider()
             footer
         }
@@ -28,10 +33,7 @@ public struct PanelRootView: View {
 
     private var header: some View {
         HStack(spacing: 8) {
-            Image(systemName: "person.crop.circle")
-                .foregroundStyle(.secondary)
-            Text(model.inventory?.viewerLogin ?? "RepoWatch")
-                .font(.headline)
+            accountMenu
             Spacer()
             if model.state == .loading {
                 ProgressView()
@@ -49,6 +51,36 @@ public struct PanelRootView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
+    }
+
+    private var accountMenu: some View {
+        Menu {
+            if case .signedIn(_, let kind) = model.auth {
+                Text(kind.displayName)
+            }
+            Divider()
+            Button("Abmelden", systemImage: "rectangle.portrait.and.arrow.right", role: .destructive) {
+                model.signOut()
+            }
+        } label: {
+            Label {
+                Text(login)
+                    .font(.headline)
+            } icon: {
+                Image(systemName: "person.crop.circle")
+                    .foregroundStyle(.secondary)
+            }
+            .labelStyle(.titleAndIcon)
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .help("Konto")
+    }
+
+    private var login: String {
+        if case .signedIn(let login, _) = model.auth, !login.isEmpty { return login }
+        return "RepoWatch"
     }
 
     // MARK: Inhalt

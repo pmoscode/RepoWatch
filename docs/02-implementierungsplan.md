@@ -69,17 +69,30 @@ Ziel: Ungewissheiten früh klären, bevor Architektur-Code entsteht.
 
 ## Phase 1 – GitHub-Zugriff und Anmeldung · M
 
-- [ ] `GraphQLClient` (actor): POST `/graphql`, Variablen, Dekodierung, **Teilfehler** (`errors` + `data` gleichzeitig) sauber abbilden
-- [ ] `RESTClient` (actor): ETag-Cache (`If-None-Match` → 304), Pagination über `Link`-Header, Behandlung von `202 Accepted` bei `stats/*`
-- [ ] `RateLimitTracker`: `remaining`/`resetAt` aus GraphQL und den `X-RateLimit-*`-Headern; Backoff bei 403/429 und `Retry-After`; maximal 2–3 Anfragen parallel
-- [ ] Fehlertypen: `offline`, `unauthorized`, `rateLimited(resetAt)`, `server`, `decoding`
-- [ ] `KeychainTokenStore`: speichern/lesen/löschen
-- [ ] OAuth-App im eigenen GitHub-Account registrieren, Device Flow aktivieren (Client-ID in die Build-Konfiguration)
+- [x] `HTTPTransport` (actor): gemeinsame Schicht für GraphQL und REST mit Token, höchstens 3 parallelen Anfragen, Wiederholung bei 500/503/504 und Netzwerk-Abbrüchen (exponentiell), **502 bewusst ohne Wiederholung** (Signal für zu schwere Abfrage, Konzept 4.3)
+- [x] `GraphQLClient`: POST `/graphql`, Variablen, Dekodierung, **Teilfehler** (`errors` + `data` gleichzeitig), `viewerLogin()`
+- [x] `RESTClient` (actor): ETag-Cache (`If-None-Match` → 304, begrenzt auf 500 Einträge), `Link`-Header (`nextPage`), `202 Accepted` → `.pending`; eigene URLSession ohne `URLCache`, damit 304 überhaupt ankommt
+- [x] Rate-Limit: `x-ratelimit-*` je Ressource merken; primäres Limit → `.rateLimited(resetAt)` und keine weiteren Anfragen bis zum Reset; sekundäres Limit → `Retry-After` abwarten
+- [x] Fehlertypen: `offline`, `unauthorized`, `rateLimited(resetAt)`, `server`, `http`, `decoding`, `pending`
+- [x] `KeychainTokenStore`: speichern/lesen/löschen (Generic Password, nicht synchronisiert); `TokenVault` hält das Token im Speicher
+- [ ] **OAuth-App registrieren** (von dir, siehe Anleitung unten) und Client-ID in `project.yml` eintragen
 - [ ] OAuth-App in den ca. 5 eigenen Organisationen freigeben (falls dort OAuth-Beschränkungen aktiv sind) und prüfen, dass deren Repos vollständig erscheinen
-- [ ] `DeviceFlowAuthenticator`: Code anfordern → Code + Link anzeigen → pollen (`interval`, `slow_down`, `expired_token` beachten)
-- [ ] PAT-Eingabe als Alternative, Token mit `viewer { login }` prüfen
-- [ ] Anmelde-Ansicht (erstes Öffnen) und Abmelden (löscht Token und Cache)
-- [ ] Tests: `URLProtocol`-Mock, Fixtures, Device-Flow-Zustandsmaschine, Rate-Limit-Backoff
+- [x] `DeviceFlowAuthenticator`: Code anfordern → Code + Link anzeigen → pollen (`interval`, `slow_down`, `expired_token`, `access_denied`)
+- [x] PAT-Eingabe als Alternative, Token mit `viewer { login }` prüfen
+- [x] Anmelde-Ansicht (erstes Öffnen), Konto-Menü mit Abmelden (löscht Token); bei HTTP 401 automatisch abmelden mit Hinweis
+- [x] Tests: `URLProtocol`-Mock (`TestSupport`), Device-Flow-Ablauf, Rate-Limit und Backoff, Drosselung, ETag, Schlüsselbund (32 Tests)
+- [ ] **Von Hand prüfen:** Anmeldung per PAT, per Device Flow (nach Eintrag der Client-ID), Neustart ohne erneute Anmeldung, Abmelden
+
+`GITHUB_TOKEN` funktioniert weiterhin, aber nur in Debug-Builds und mit Vorrang vor dem Schlüsselbund.
+
+### Anleitung: OAuth-App registrieren
+
+1. <https://github.com/settings/applications/new> öffnen (Settings → Developer settings → OAuth Apps → *New OAuth App*).
+2. *Application name:* `RepoWatch` · *Homepage URL:* `https://github.com/pmoscode/RepoWatch` · *Authorization callback URL:* ebenfalls `https://github.com/pmoscode/RepoWatch` (wird beim Device Flow nicht benutzt, ist aber Pflicht).
+3. **„Enable Device Flow“ anhaken** und registrieren.
+4. Die angezeigte **Client ID** in `project.yml` bei `GITHUB_OAUTH_CLIENT_ID` eintragen. Ein Client Secret wird **nicht** gebraucht und gehört nicht ins Repo.
+5. `xcodegen generate` und neu bauen. Danach ist „Mit GitHub anmelden“ aktiv.
+6. Für Organisationen mit OAuth-Beschränkung: Org-Einstellungen → *Third-party access* → RepoWatch freigeben (oder beim ersten Anmelden auf der GitHub-Seite „Grant“ bzw. „Request“ wählen).
 
 **Fertig, wenn:** Die Anmeldung per Device Flow klappt, das Token einen Neustart übersteht und alle Tests grün sind.
 

@@ -12,6 +12,9 @@ settings:
     SWIFT_STRICT_CONCURRENCY: complete
     MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
+    # Client-ID der OAuth-App (öffentlich, kein Geheimnis). Leer = Anmeldung nur per PAT.
+    # Anleitung: docs/02-implementierungsplan.md, Phase 1.
+    GITHUB_OAUTH_CLIENT_ID: "Ov23liIfaL2AGrz8YLoL"
     ENABLE_USER_SCRIPT_SANDBOXING: YES
 
 packages:
@@ -34,6 +37,7 @@ targets:
         LSUIElement: true
         LSApplicationCategoryType: public.app-category.developer-tools
         NSHumanReadableCopyright: ""
+        GitHubOAuthClientID: $(GITHUB_OAUTH_CLIENT_ID)
     entitlements:
       path: App/RepoWatch.entitlements
       properties:

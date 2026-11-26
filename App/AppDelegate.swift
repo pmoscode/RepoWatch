@@ -10,7 +10,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var panelController: PanelController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        let model = AppModel()
+        #if DEBUG
+        let configuration = AppConfiguration.live(allowEnvironmentToken: true)
+        #else
+        let configuration = AppConfiguration.live(allowEnvironmentToken: false)
+        #endif
+        let model = AppModel(configuration: configuration)
         let panelController = PanelController(
             rootView: PanelRootView(model: model, onQuit: { NSApp.terminate(nil) })
         )
@@ -27,7 +32,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         self.panelController = panelController
         self.statusItemController = statusItemController
 
-        model.refresh()
+        model.start()
 
         #if DEBUG
         // Entwicklung: `--show-panel` öffnet das Panel direkt nach dem Start (z. B. für Screenshots).

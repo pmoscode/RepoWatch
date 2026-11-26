@@ -1,11 +1,6 @@
 import Domain
 import Foundation
 
-/// Liefert das aktuelle Zugriffstoken. Umsetzungen liegen im Target `Auth`.
-public protocol TokenProviding: Sendable {
-    func token() async throws -> String
-}
-
 /// Eine GraphQL-Operation mit ihrem Antworttyp (Inhalt von `data`).
 public struct GraphQLOperation<Response: Decodable & Sendable>: Sendable {
     public let name: String
@@ -74,75 +69,26 @@ public struct GraphQLResult<Response: Sendable>: Sendable {
     public let partialErrors: [GraphQLError]
 }
 
-public enum GitHubAPIError: Error, Sendable, Equatable {
-    case missingToken
-    case unauthorized
-    case rateLimited(resetAt: Date?)
-    case http(status: Int)
-    case graphQL([GraphQLError])
-    case decoding(String)
-    case transport(String)
-}
-
-extension GitHubAPIError: LocalizedError {
-    public var errorDescription: String? {
-        switch self {
-        case .missingToken: "Kein GitHub-Token vorhanden."
-        case .unauthorized: "GitHub hat das Token abgelehnt."
-        case .rateLimited: "GitHub-Kontingent erschöpft."
-        case .http(let status): "GitHub antwortete mit HTTP \(status)."
-        case .graphQL(let errors): errors.map(\.message).joined(separator: "\n")
-        case .decoding(let detail): "Antwort nicht lesbar: \(detail)"
-        case .transport(let detail): "Netzwerkfehler: \(detail)"
-        }
-    }
-}
-
-/// Minimaler GraphQL-Client. Ausbau (Backoff, Drosselung) folgt in Phase 1.
-public actor GraphQLClient {
+/// GraphQL über die gemeinsame `HTTPTransport`-Schicht.
+public struct GraphQLClient: Sendable {
     public static let defaultEndpoint = URL(string: "https://api.github.com/graphql")!
 
+    public let transport: HTTPTransport
     private let endpoint: URL
-    private let session: URLSession
-    private let tokenProvider: any TokenProviding
 
-    public init(
-        endpoint: URL = GraphQLClient.defaultEndpoint,
-        session: URLSession = .shared,
-        tokenProvider: any TokenProviding
-    ) {
+    public init(transport: HTTPTransport, endpoint: URL = GraphQLClient.defaultEndpoint) {
+        self.transport = transport
         self.endpoint = endpoint
-        self.session = session
-        self.tokenProvider = tokenProvider
     }
 
     public func send<Response>(_ operation: GraphQLOperation<Response>) async throws -> GraphQLResult<Response> {
-        let token: String
-        do {
-            token = try await tokenProvider.token()
-        } catch {
-            throw GitHubAPIError.missingToken
-        }
-
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
-        request.setValue("bearer \(token)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("RepoWatch", forHTTPHeaderField: "User-Agent")
         request.httpBody = try JSONEncoder().encode(
             RequestBody(query: operation.query, variables: operation.variables, operationName: operation.name)
         )
-
-        let (body, response): (Data, URLResponse)
-        do {
-            (body, response) = try await session.data(for: request)
-        } catch {
-            throw GitHubAPIError.transport(error.localizedDescription)
-        }
-
-        if let http = response as? HTTPURLResponse {
-            try Self.check(http)
-        }
+        let (body, _) = try await transport.send(request)
         return try Self.decode(body)
     }
 
@@ -166,27 +112,6 @@ public actor GraphQLClient {
         return GraphQLResult(data: data, partialErrors: errors)
     }
 
-    static func check(_ response: HTTPURLResponse) throws {
-        switch response.statusCode {
-        case 200..<300:
-            return
-        case 401:
-            throw GitHubAPIError.unauthorized
-        case 403, 429:
-            let remaining = response.value(forHTTPHeaderField: "x-ratelimit-remaining")
-            let isLimited = remaining == "0" || response.value(forHTTPHeaderField: "retry-after") != nil
-            if isLimited {
-                let reset = response.value(forHTTPHeaderField: "x-ratelimit-reset")
-                    .flatMap(TimeInterval.init)
-                    .map(Date.init(timeIntervalSince1970:))
-                throw GitHubAPIError.rateLimited(resetAt: reset)
-            }
-            throw GitHubAPIError.http(status: response.statusCode)
-        default:
-            throw GitHubAPIError.http(status: response.statusCode)
-        }
-    }
-
     private struct RequestBody: Encodable {
         let query: String
         let variables: [String: GraphQLVariable]
@@ -196,5 +121,22 @@ public actor GraphQLClient {
     private struct Envelope<D: Decodable>: Decodable {
         let data: D?
         let errors: [GraphQLError]?
+    }
+}
+
+// MARK: - Angemeldeter Benutzer
+
+public struct ViewerResponse: Decodable, Sendable {
+    public struct Viewer: Decodable, Sendable {
+        public let login: String
+    }
+    public let viewer: Viewer
+}
+
+extension GraphQLClient {
+    /// Login des Token-Inhabers; prüft dabei gleichzeitig, ob das Token gültig ist.
+    public func viewerLogin() async throws -> String {
+        let operation = GraphQLOperation<ViewerResponse>(name: "Viewer", query: "query Viewer { viewer { login } }")
+        return try await send(operation).data.viewer.login
     }
 }

@@ -38,9 +38,16 @@ let package = Package(
             ]
         ),
 
+        // Gemeinsame Test-Hilfen (URLProtocol-Mock, Sleep-Aufzeichnung); nur für Test-Targets.
+        .target(name: "TestSupport", path: "Tests/TestSupport"),
+
         .testTarget(
             name: "GitHubAPITests",
-            dependencies: ["GitHubAPI", "Domain"]
+            dependencies: ["GitHubAPI", "Domain", "TestSupport"]
+        ),
+        .testTarget(
+            name: "AuthTests",
+            dependencies: ["Auth", "GitHubAPI", "TestSupport"]
         ),
         .testTarget(
             name: "SyncTests",

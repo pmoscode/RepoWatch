@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import TestSupport
 @testable import GitHubAPI
 
 @Suite("GraphQL-Antworten")
@@ -45,35 +46,25 @@ struct GraphQLDecodingTests {
     }
 }
 
-@Suite("HTTP-Status")
-struct HTTPStatusTests {
-    private func response(_ status: Int, headers: [String: String] = [:]) -> HTTPURLResponse {
-        HTTPURLResponse(url: GraphQLClient.defaultEndpoint, statusCode: status, httpVersion: nil, headerFields: headers)!
-    }
-
-    @Test func okPasses() throws {
-        try GraphQLClient.check(response(200))
-    }
-
-    @Test func unauthorized() {
-        #expect(throws: GitHubAPIError.unauthorized) { try GraphQLClient.check(response(401)) }
-    }
-
-    @Test("403 mit leerem Kontingent ist ein Rate-Limit mit Reset-Zeit")
-    func primaryRateLimit() {
-        let reset = Date(timeIntervalSince1970: 1_800_000_000)
-        #expect(throws: GitHubAPIError.rateLimited(resetAt: reset)) {
-            try GraphQLClient.check(response(403, headers: [
-                "x-ratelimit-remaining": "0",
-                "x-ratelimit-reset": "1800000000",
-            ]))
+@Suite("GraphQL-Anfrage")
+struct GraphQLRequestTests {
+    @Test("Sendet POST mit Token, Operation und Variablen")
+    func sendsRequest() async throws {
+        let seen = Locked<URLRequest?>(nil)
+        let (session, baseURL) = MockURLProtocol.makeSession { request in
+            seen.withLock { $0 = request }
+            return (.make(200, for: request), Data(#"{"data":{"viewer":{"login":"octo"}}}"#.utf8))
         }
-    }
+        let transport = HTTPTransport(tokenProvider: StaticTokenProvider("t0ken"), session: session)
+        let client = GraphQLClient(transport: transport, endpoint: baseURL.appending(path: "graphql"))
 
-    @Test("403 ohne Limit-Hinweis bleibt ein HTTP-Fehler")
-    func plainForbidden() {
-        #expect(throws: GitHubAPIError.http(status: 403)) {
-            try GraphQLClient.check(response(403, headers: ["x-ratelimit-remaining": "4000"]))
-        }
+        #expect(try await client.viewerLogin() == "octo")
+
+        let request = try #require(seen.value)
+        #expect(request.httpMethod == "POST")
+        #expect(request.value(forHTTPHeaderField: "Authorization") == "bearer t0ken")
+        let body = try #require(request.bodyData)
+        let json = try #require(try JSONSerialization.jsonObject(with: body) as? [String: Any])
+        #expect(json["operationName"] as? String == "Viewer")
     }
 }

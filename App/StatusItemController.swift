@@ -75,6 +75,12 @@ final class StatusItemController: NSObject {
 
     private func updateButton() {
         guard let button = statusItem.button else { return }
+        guard model.isSignedIn else {
+            button.title = ""
+            button.appearsDisabled = true
+            button.toolTip = String(localized: "RepoWatch – nicht angemeldet")
+            return
+        }
         switch model.state {
         case .failed(let message):
             button.title = ""
