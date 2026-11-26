@@ -1,0 +1,124 @@
+# Aufgaben für die Entwicklung, ausgeführt mit Task (https://taskfile.dev, `brew install go-task`).
+#
+#   task            listet alle Aufgaben
+#   task install    baut RepoWatch für diesen Mac und installiert es nach /Applications
+version: "3"
+
+set: [pipefail]
+
+vars:
+  PROJECT: RepoWatch.xcodeproj
+  SCHEME: RepoWatch
+  PACKAGE: Packages/RepoWatchKit
+  LOCAL_DIR: build/local
+  LOCAL_APP: "{{.LOCAL_DIR}}/DerivedData/Build/Products/Release/RepoWatch.app"
+  DEBUG_DIR: build/debug
+  DEBUG_APP: "{{.DEBUG_DIR}}/DerivedData/Build/Products/Debug/RepoWatch.app"
+  INSTALL_DIR: '{{.INSTALL_DIR | default "/Applications"}}'
+  # Nur die Architektur dieses Macs bauen (Task meldet Intel als amd64).
+  DESTINATION: 'platform=macOS,arch={{if eq ARCH "amd64"}}x86_64{{else}}arm64{{end}}'
+
+tasks:
+  default:
+    desc: Alle Aufgaben anzeigen
+    silent: true
+    cmds:
+      - task --list
+
+  generate:
+    desc: Xcode-Projekt aus project.yml erzeugen
+    preconditions:
+      - sh: command -v xcodegen
+        msg: "XcodeGen fehlt: brew install xcodegen"
+    cmds:
+      - xcodegen generate --quiet
+
+  build:
+    desc: Release-Build nur für diesen Mac (ad hoc signiert) nach build/local
+    deps: [generate]
+    cmds:
+      - >-
+        xcodebuild -quiet
+        -project {{.PROJECT}} -scheme {{.SCHEME}}
+        -configuration Release
+        -destination "{{.DESTINATION}}"
+        -derivedDataPath {{.LOCAL_DIR}}/DerivedData
+        ONLY_ACTIVE_ARCH=YES
+        CODE_SIGN_IDENTITY=-
+        build
+      - codesign --verify --deep --strict {{.LOCAL_APP}}
+      - echo "→ Gebaut {{.LOCAL_APP}}"
+
+  build:debug:
+    desc: Debug-Build nach build/debug
+    deps: [generate]
+    cmds:
+      - >-
+        xcodebuild -quiet
+        -project {{.PROJECT}} -scheme {{.SCHEME}}
+        -configuration Debug
+        -destination "{{.DESTINATION}}"
+        -derivedDataPath {{.DEBUG_DIR}}/DerivedData
+        build
+
+  run:
+    desc: Release-Build bauen und direkt aus build/local starten
+    deps: [build]
+    cmds:
+      - task: quit
+      - open {{.LOCAL_APP}}
+
+  install:
+    desc: Release-Build nach /Applications installieren und starten (anderer Ort mit INSTALL_DIR=…)
+    deps: [build]
+    cmds:
+      - task: quit
+      - rm -rf "{{.INSTALL_DIR}}/RepoWatch.app"
+      - ditto {{.LOCAL_APP}} "{{.INSTALL_DIR}}/RepoWatch.app"
+      - echo "→ Installiert {{.INSTALL_DIR}}/RepoWatch.app"
+      - open "{{.INSTALL_DIR}}/RepoWatch.app"
+
+  uninstall:
+    desc: RepoWatch aus /Applications entfernen (Token und Cache bleiben; dafür vorher in der App abmelden)
+    cmds:
+      - task: quit
+      - rm -rf "{{.INSTALL_DIR}}/RepoWatch.app"
+
+  demo:
+    desc: Debug-Build mit Demo-Daten starten (ohne Token, ohne Netz)
+    deps: [build:debug]
+    cmds:
+      - task: quit
+      - open {{.DEBUG_APP}} --args --demo --show-panel
+
+  quit:
+    desc: Laufendes RepoWatch beenden
+    internal: true
+    cmds:
+      - pkill -x RepoWatch && sleep 1 || true
+
+  test:
+    desc: Tests des Swift-Pakets (ohne Netz)
+    cmds:
+      - swift test --package-path {{.PACKAGE}}
+
+  lint:
+    desc: GitHub-Workflows mit actionlint prüfen
+    preconditions:
+      - sh: command -v actionlint
+        msg: "actionlint fehlt: brew install actionlint"
+    cmds:
+      - actionlint
+
+  release:
+    desc: "Universelles DMG wie im Release-Workflow bauen, z. B. task release VERSION=0.1.0"
+    requires:
+      vars: [VERSION]
+    cmds:
+      - scripts/build-release.sh {{.VERSION}}
+
+  clean:
+    desc: Build-Ordner und erzeugtes Xcode-Projekt löschen
+    cmds:
+      - rm -rf build {{.PROJECT}}
+      - swift package clean --package-path {{.PACKAGE}}

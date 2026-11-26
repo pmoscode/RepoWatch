@@ -29,13 +29,6 @@ final class PanelController: NSObject, NSWindowDelegate {
         let glass = NSGlassEffectView()
         glass.cornerRadius = 18
         glass.contentView = hostingController.view
-        #if DEBUG
-        // `--no-glass`: ohne Glas-Ebene, um Snapshots mit echten Farben zu vergleichen.
-        let usesGlass = !ProcessInfo.processInfo.arguments.contains("--no-glass")
-        #else
-        let usesGlass = true
-        #endif
-
         panel = KeyablePanel(
             contentRect: NSRect(origin: .zero, size: CGSize(width: 400, height: 560)),
             styleMask: [.borderless, .nonactivatingPanel],
@@ -44,13 +37,15 @@ final class PanelController: NSObject, NSWindowDelegate {
         )
         super.init()
 
-        if usesGlass {
-            panel.contentView = glass
-        } else {
+        panel.contentView = glass
+        #if DEBUG
+        // `--no-glass`: ohne Glas-Ebene, um Snapshots mit echten Farben zu vergleichen.
+        if ProcessInfo.processInfo.arguments.contains("--no-glass") {
             hostingController.view.wantsLayer = true
             hostingController.view.layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
             panel.contentView = hostingController.view
         }
+        #endif
         panel.isFloatingPanel = true
         panel.level = .statusBar
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient, .ignoresCycle]

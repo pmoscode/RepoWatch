@@ -68,21 +68,35 @@ Beim ersten Öffnen fragt RepoWatch nach der Anmeldung:
 
 ## Entwicklung
 
-Benötigt Xcode 27 und [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`).
+Benötigt Xcode 27, [XcodeGen](https://github.com/yonaskolb/XcodeGen) und [Task](https://taskfile.dev):
 
 ```bash
-xcodegen generate
+brew install xcodegen go-task
 ```
+
+RepoWatch für diesen Mac bauen, nach `/Applications` installieren und starten:
 
 ```bash
-open RepoWatch.xcodeproj
+task install
 ```
 
-Tests (über 90, ohne Netz):
+Weitere Aufgaben (`task` listet alle):
 
-```bash
-swift test --package-path Packages/RepoWatchKit
-```
+| Aufgabe | Wirkung |
+|---|---|
+| `task build` | Release-Build nur für die Architektur dieses Macs, ad hoc signiert, nach `build/local/` |
+| `task run` | wie `build`, startet die App direkt aus `build/local/` |
+| `task install` | wie `build`, kopiert nach `/Applications` (anderer Ort: `task install INSTALL_DIR=~/Applications`) |
+| `task demo` | Debug-Build mit Demo-Daten, ohne Token und ohne Netz |
+| `task test` | Tests des Swift-Pakets (über 90, ohne Netz) |
+| `task lint` | Workflows mit actionlint prüfen |
+| `task release VERSION=0.1.0` | universelles DMG wie im Release-Workflow |
+| `task generate` | nur das Xcode-Projekt erzeugen, danach `open RepoWatch.xcodeproj` |
+| `task clean` | Build-Ordner und erzeugtes Projekt löschen |
+
+Ein neu gebautes, ad hoc signiertes RepoWatch gilt für den Schlüsselbund als andere App. Beim ersten
+Start nach dem Bauen fragt macOS deshalb, ob RepoWatch das gespeicherte Token lesen darf
+(*Immer erlauben*).
 
 Aufbau:
 
@@ -92,6 +106,7 @@ Aufbau:
 | `Packages/RepoWatchKit/Sources/` | Alle Schichten als eigene Targets: `Domain`, `GitHubAPI`, `Auth`, `Persistence`, `ModuleKit`, `ModuleUIKit`, `Sync`, `DesignSystem`, die vier Module und `Features` (Panel, Einstellungen) |
 | `docs/` | [Konzept](docs/01-konzept.md) und [Implementierungsplan](docs/02-implementierungsplan.md) |
 | `scripts/build-release.sh` | Release-Build und DMG, signiert und notarisiert, wenn die Zugangsdaten gesetzt sind |
+| `Taskfile.yml` | Aufgaben für Bauen, Installieren, Tests und Release |
 
 Startparameter für Debug-Builds:
 
