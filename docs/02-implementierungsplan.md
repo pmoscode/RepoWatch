@@ -163,24 +163,26 @@ Unterwegs gefunden und behoben: Im `RefreshScheduler` konnte ein Auslöser (z. B
 
 ## Phase 4 – Oberfläche · L
 
-- [ ] **DesignSystem:** `CountBadge`, `Chip` (Label-Farben von GitHub), `AuthorKindIcon`, `ActivityIndicator`, `RunStatusIcon` (✓/✗/läuft mit Animation/abgebrochen), `Sparkline`, `RelativeTimeText`, `RepoRow`, Zustände für Laden/Leer/Fehler
-- [ ] **Menüleisten-Symbol:** Anzeige-Modi (nichts, Punkt, Zähler), roter Punkt bei Fehlschlag auf dem Standard-Branch oder in einem Menschen-PR (E7), Fehlerzustand
-- [ ] **Popover:**
-  - [ ] Kopfbereich: Konto, Suche, Aktualisieren, Einstellungen
-  - [ ] Reiter: Übersicht · Issues · PRs · Actions · Aktivität (Reiter kommen aus der Modul-Registry)
-  - [ ] Übersicht: Favoriten, Sortierung (Aktivität, Name, letzter Push, offene Einträge), Markierung für Neues
-  - [ ] Issues-Reiter: über alle Repos, Filter nach Repo und Label
-  - [ ] PRs-Reiter: Gruppen nach Autor-Art, Bot-Gruppen eingeklappt
-  - [ ] Actions-Reiter: Fehlgeschlagen · Läuft gerade · Zuletzt erfolgreich; Filter Branch/Auslöser/Bot-Runs
-  - [ ] CI-Status in der Repo-Zeile der Übersicht
-  - [ ] Aktivitäts-Reiter: Feed
-  - [ ] Fußzeile: zuletzt aktualisiert, API-Kontingent
-- [ ] **Detailansicht** per `NavigationStack` im Popover, ein Abschnitt pro Modul
-- [ ] Interaktion: Öffnen im Browser (`NSWorkspace.shared.open`), Kontextmenü (Link kopieren, als gesehen markieren, Favorit), Tastatur (⌘F, ⌘R, ⌘,, Pfeiltasten, ↩)
-- [ ] **Einstellungsfenster** (`Settings`-Szene) mit den Reitern aus dem Konzept (3.3)
-- [ ] SwiftUI-Previews für alle Ansichten mit Beispieldaten (Fixtures)
+- [x] **Darstellung als Teil der Module:** neues Target `ModuleUIKit` mit dem Protokoll `ModuleUI` (Symbol in der Repo-Zeile, Zusatzinfo, Detail-Abschnitt, eigener Reiter, „neu seit …“) und dem `ModuleUIContext` (Stand, Einstellungen, Suche, Aktionen, Dienste für Nachladen). Das Panel setzt nur noch zusammen; ein neues Modul bringt seine Oberfläche selbst mit
+- [x] **DesignSystem:** `CountBadge`, `LabelChip` (GitHub-Farben), `AuthorKindIcon`, `ActivityIndicator`, `StatusIcon` (✓/✗/läuft mit Animation/abgebrochen), `Sparkline`, `RelativeTimeText` (bricht nie um), `NewDot`, `TagText`, `SectionTitle`, `EmptyStateView`
+- [x] **Menüleisten-Symbol:** Anzeige-Modi (nur Symbol, Punkt bei Neuem, offene PRs von Menschen, Summe), roter Punkt bei Alarm (E7, abschaltbar), Tooltip mit Grund; Rechtsklick-Menü mit „Einstellungen …“
+- [x] **Popover:**
+  - [x] Kopfbereich: Konto-Menü (Abmelden), Suche (⌘F, Esc schließt), Aktualisieren (⌘R), Einstellungen (⌘,)
+  - [x] Reiter aus der Modul-Registry: Übersicht · Issues · PRs · Aktivität · Actions; nur der gewählte Reiter zeigt seinen Titel, die anderen Symbol + Zahl (rot bei Alarm)
+  - [x] Übersicht: Favoriten oben, Sortierung (Aktivität, Name, letzter Push, offene Einträge), Markierung für Neues, Kontextmenü (öffnen, Link kopieren, als gesehen markieren, Favorit), Pfeiltasten + ↩
+  - [x] Issues-Reiter: über alle Repos, Filter nach Repo und Label, **Bot-Issues ausblenden** (Standard an; im Test 43 → 5, der Rest waren Renovates „Dependency Dashboards“)
+  - [x] PRs-Reiter: Gruppen nach Autor-Art, Bot-Gruppen eingeklappt („98 in 28 Repos“, rote Checks je Gruppe)
+  - [x] Actions-Reiter: Fehlgeschlagen (erst Standard-Branch, dann Menschen-PRs, dann Bots) · Läuft gerade · Zuletzt erfolgreich (eingeklappt); Filter alle Branches / Bot-PRs
+  - [x] Aktivitäts-Reiter: Feed der 15 aktivsten Repos aus der Events-API (ETag); Links werden aus Repo und Nummer gebaut, weil GitHub die Payloads gekürzt hat
+  - [x] CI-Status, Aktivitätsstufe, Commits/7T und „rot seit …“ in der Repo-Zeile der Übersicht
+  - [x] Fußzeile: zuletzt aktualisiert bzw. „Stand von …“ bei Fehlern, API-Kontingent
+- [x] **Detailansicht** (eigene Navigation im Panel, ⌘[ bzw. ⌘← zurück): Kopf mit Favorit und „Auf GitHub“, je Modul ein Abschnitt (Issues mit „Weitere laden“, PRs, Aktivität mit Kennzahlen, Wochen-Sparkline und Ereignissen, Actions mit Workflow-Zuständen und letzten Runs); markiert das Repo als gesehen
+- [x] **Einstellungsfenster** (eigenes `NSWindow`, weil das `Settings`-Szenen-Fenster aus einer App ohne Dock-Icon nicht zuverlässig nach vorn kommt) mit Konto, Repositories, Pull Requests, Actions, Aktualisierung, Module, Allgemein; Einstellungen werden in den `UserDefaults` gespeichert und wirken sofort (Filter, Regeln und Module lösen einen Sync aus)
+- [x] Debug-Startparameter für Screenshots: `--show-panel`, `--tab <id>`, `--repo <name>`, `--show-settings`, `--snapshot <name>`, `--no-glass`
+- [ ] SwiftUI-Previews mit Beispieldaten (noch nicht angelegt; die Ansichten wurden per Snapshot mit echten Daten geprüft)
+- [ ] **Von Hand prüfen:** Farben und Lesbarkeit auf der echten Glas-Ebene (Snapshots zeigen die Glas-Ebene nicht; ohne sie stimmen Farben und Kontraste), Tastaturbedienung, Kontextmenüs, Einstellungsfenster
 
-**Fertig, wenn:** Alle vier Anforderungen (Issues, PRs mit Autor-Art, Aktivität, Actions-Runs) im Popover von Anfang bis Ende funktionieren, mit echten Daten.
+**Fertig, wenn:** Alle vier Anforderungen (Issues, PRs mit Autor-Art, Aktivität, Actions-Runs) im Popover von Anfang bis Ende funktionieren, mit echten Daten. → erfüllt, bis auf die Prüfung von Hand.
 
 ---
 

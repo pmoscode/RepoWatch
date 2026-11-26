@@ -23,17 +23,19 @@ let package = Package(
         .target(name: "Sync", dependencies: ["Domain", "GitHubAPI", "Auth", "Persistence", "ModuleKit"]),
 
         .target(name: "DesignSystem", dependencies: ["Domain"]),
+        // Darstellung der Module (Konzept 9.2, Punkt 4): eigenes Target, damit ModuleKit SwiftUI-frei bleibt.
+        .target(name: "ModuleUIKit", dependencies: ["Domain", "GitHubAPI", "ModuleKit", "Persistence", "DesignSystem"]),
 
         // Module (Konzept, Abschnitt 9.2)
-        .target(name: "IssuesModule", dependencies: ["Domain", "ModuleKit", "GitHubAPI", "DesignSystem"]),
-        .target(name: "PullRequestsModule", dependencies: ["Domain", "ModuleKit", "GitHubAPI", "DesignSystem"]),
-        .target(name: "ActivityModule", dependencies: ["Domain", "ModuleKit", "GitHubAPI", "DesignSystem"]),
-        .target(name: "ActionsModule", dependencies: ["Domain", "ModuleKit", "GitHubAPI", "DesignSystem"]),
+        .target(name: "IssuesModule", dependencies: ["Domain", "ModuleKit", "GitHubAPI", "DesignSystem", "ModuleUIKit"]),
+        .target(name: "PullRequestsModule", dependencies: ["Domain", "ModuleKit", "GitHubAPI", "DesignSystem", "ModuleUIKit"]),
+        .target(name: "ActivityModule", dependencies: ["Domain", "ModuleKit", "GitHubAPI", "DesignSystem", "ModuleUIKit"]),
+        .target(name: "ActionsModule", dependencies: ["Domain", "ModuleKit", "GitHubAPI", "DesignSystem", "ModuleUIKit"]),
 
         .target(
             name: "Features",
             dependencies: [
-                "Domain", "GitHubAPI", "Auth", "Sync", "ModuleKit", "Persistence", "DesignSystem",
+                "Domain", "GitHubAPI", "Auth", "Sync", "ModuleKit", "ModuleUIKit", "Persistence", "DesignSystem",
                 "IssuesModule", "PullRequestsModule", "ActivityModule", "ActionsModule",
             ]
         ),

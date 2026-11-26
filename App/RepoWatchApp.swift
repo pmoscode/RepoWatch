@@ -5,10 +5,10 @@ struct RepoWatchApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     var body: some Scene {
-        // Platzhalter; das Einstellungsfenster folgt in Phase 4 (Konzept 3.3).
+        // Eine Szene braucht jede App. Das Einstellungsfenster verwaltet `SettingsWindowController`
+        // selbst, weil eine App ohne Dock-Icon das Szenen-Fenster nicht zuverlässig nach vorn holt.
         Settings {
-            Text("Einstellungen folgen.")
-                .padding(40)
+            EmptyView()
         }
     }
 }

@@ -40,6 +40,8 @@ public struct RelativeTimeText: View {
         TimelineView(.periodic(from: .now, by: 60)) { context in
             Text(date, format: .relative(presentation: .named, unitsStyle: .abbreviated))
                 .id(context.date)
+                .lineLimit(1)
+                .fixedSize()
         }
     }
 }

@@ -34,10 +34,11 @@ public struct PullRequestsModule: InsightModule {
     public static let pageSize = 30
 
     public let metadata = ModuleMetadata(title: String(localized: "Pull Requests"), systemImage: "arrow.triangle.pull", defaultOrder: 20)
-    private let classifier: AuthorClassifier
+    private let rules: SharedValue<AuthorRules>
 
-    public init(rules: AuthorRules = .default) {
-        classifier = .standard(rules)
+    /// `rules` wird bei jedem Dekodieren gelesen; Änderungen greifen beim nächsten Sync.
+    public init(rules: SharedValue<AuthorRules> = SharedValue(.default)) {
+        self.rules = rules
     }
 
     public var fragment: GraphQLFragment {
@@ -91,6 +92,7 @@ public struct PullRequestsModule: InsightModule {
 
     public func decode(_ node: RepositoryNode, context: ModuleContext) throws -> PullRequestsPayload {
         let connection = try node.decode(Node.self).m_prs_open
+        let classifier = AuthorClassifier.standard(rules.value)
         let items = connection.nodes.map { pr in
             PullRequestSummary(
                 number: pr.number, title: pr.title, url: pr.url, isDraft: pr.isDraft,

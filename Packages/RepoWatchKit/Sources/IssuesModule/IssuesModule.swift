@@ -17,6 +17,8 @@ public struct IssueSummary: Codable, Sendable, Hashable, Identifiable {
     public let createdAt: Date
     public let updatedAt: Date
     public let author: String?
+    /// GraphQL-`__typename` des Autors (`User`, `Bot` …); fehlt in Caches vor Phase 4.
+    public let authorType: String?
     public let commentCount: Int
     public let labels: [IssueLabel]
 }
@@ -45,7 +47,7 @@ public struct IssuesModule: InsightModule {
     pageInfo { hasNextPage endCursor }
     nodes {
       number title url createdAt updatedAt
-      author { login }
+      author { __typename login }
       comments { totalCount }
       labels(first: 5) { nodes { name color } }
     }
@@ -65,7 +67,10 @@ public struct IssuesModule: InsightModule {
             let endCursor: String?
         }
         struct Node: Decodable {
-            struct Login: Decodable { let login: String }
+            struct Login: Decodable {
+                let __typename: String?
+                let login: String
+            }
             struct Count: Decodable { let totalCount: Int }
             struct Labels: Decodable { let nodes: [IssueLabel] }
             let number: Int
@@ -85,7 +90,8 @@ public struct IssuesModule: InsightModule {
             nodes.map {
                 IssueSummary(
                     number: $0.number, title: $0.title, url: $0.url, createdAt: $0.createdAt, updatedAt: $0.updatedAt,
-                    author: $0.author?.login, commentCount: $0.comments.totalCount, labels: $0.labels.nodes
+                    author: $0.author?.login, authorType: $0.author?.__typename,
+                    commentCount: $0.comments.totalCount, labels: $0.labels.nodes
                 )
             }
         }
@@ -119,6 +125,13 @@ public struct IssuesModule: InsightModule {
 }
 
 extension IssueSummary {
+    /// Von einem Bot (Renovate, Dependabot, `…[bot]`, `__typename == Bot`)?
+    public func isFromBot(rules: AuthorRules) -> Bool {
+        guard let author else { return false }
+        let kind = AuthorClassifier.standard(rules).classify(AuthorInput(login: author, typeName: authorType), viewerLogin: "")
+        return !kind.isPerson
+    }
+
     var diffItem: ItemDiff.Item { ItemDiff.Item(number: number, title: title, url: url, updatedAt: updatedAt) }
 }
 

@@ -45,6 +45,7 @@ extension ActivityModule {
     /// Rohform der Events-API; alle Inhalte optional, weil GitHub die Payloads gekürzt hat.
     struct RawEvent: Decodable, Sendable {
         struct Actor: Decodable, Sendable { let login: String }
+        struct Repo: Decodable, Sendable { let name: String }
         struct Payload: Decodable, Sendable {
             struct Item: Decodable, Sendable {
                 let number: Int?
@@ -67,6 +68,7 @@ extension ActivityModule {
         let id: String
         let type: String
         let actor: Actor
+        let repo: Repo?
         let createdAt: Date
         let payload: Payload?
 
@@ -77,10 +79,12 @@ extension ActivityModule {
             var detail: String?
             var url: URL?
 
-            func describe(_ item: Payload.Item?) {
+            // GitHub kürzt die Payloads der Events-API; fehlt `html_url`, wird der Link aus Repo und Nummer gebaut.
+            let repositoryURL = repo.flatMap { URL(string: "https://github.com/\($0.name)") }
+            func describe(_ item: Payload.Item?, path: String) {
                 if let item {
                     detail = [item.number.map { "#\($0)" }, item.title].compactMap { $0 }.joined(separator: " ")
-                    url = item.htmlUrl
+                    url = item.htmlUrl ?? item.number.flatMap { number in repositoryURL?.appending(path: "\(path)/\(number)") }
                 }
             }
 
@@ -94,7 +98,7 @@ extension ActivityModule {
                 case "closed": kind = payload?.pullRequest?.merged == true ? .pullRequestMerged : .pullRequestClosed
                 default: kind = .other
                 }
-                describe(payload?.pullRequest)
+                describe(payload?.pullRequest, path: "pull")
             case "IssuesEvent":
                 switch action {
                 case "opened": kind = .issueOpened
@@ -102,13 +106,13 @@ extension ActivityModule {
                 case "reopened": kind = .issueReopened
                 default: kind = .other
                 }
-                describe(payload?.issue)
+                describe(payload?.issue, path: "issues")
             case "IssueCommentEvent", "PullRequestReviewCommentEvent", "CommitCommentEvent":
                 kind = .comment
-                describe(payload?.issue ?? payload?.pullRequest)
+                describe(payload?.issue ?? payload?.pullRequest, path: "issues")
             case "PullRequestReviewEvent":
                 kind = .review
-                describe(payload?.pullRequest)
+                describe(payload?.pullRequest, path: "pull")
             case "ReleaseEvent":
                 kind = .release
                 detail = payload?.release?.name ?? payload?.release?.tagName
@@ -127,7 +131,7 @@ extension ActivityModule {
                 kind = .other
                 detail = type
             }
-            return ActivityEvent(id: id, kind: kind, actor: actor.login, createdAt: createdAt, detail: detail, url: url)
+            return ActivityEvent(id: id, kind: kind, actor: actor.login, createdAt: createdAt, detail: detail, url: url ?? repositoryURL)
         }
     }
 }

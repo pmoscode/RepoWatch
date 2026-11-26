@@ -29,6 +29,12 @@ final class PanelController: NSObject, NSWindowDelegate {
         let glass = NSGlassEffectView()
         glass.cornerRadius = 18
         glass.contentView = hostingController.view
+        #if DEBUG
+        // `--no-glass`: ohne Glas-Ebene, um Snapshots mit echten Farben zu vergleichen.
+        let usesGlass = !ProcessInfo.processInfo.arguments.contains("--no-glass")
+        #else
+        let usesGlass = true
+        #endif
 
         panel = KeyablePanel(
             contentRect: NSRect(origin: .zero, size: CGSize(width: 400, height: 560)),
@@ -38,7 +44,13 @@ final class PanelController: NSObject, NSWindowDelegate {
         )
         super.init()
 
-        panel.contentView = glass
+        if usesGlass {
+            panel.contentView = glass
+        } else {
+            hostingController.view.wantsLayer = true
+            hostingController.view.layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
+            panel.contentView = hostingController.view
+        }
         panel.isFloatingPanel = true
         panel.level = .statusBar
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient, .ignoresCycle]
@@ -73,13 +85,8 @@ final class PanelController: NSObject, NSWindowDelegate {
     }
 
     #if DEBUG
-    /// Entwicklung: speichert den Panel-Inhalt als PNG (ohne Glas-Unschärfe, die rendert nur der WindowServer).
-    func writeSnapshot(to url: URL) throws {
-        guard let view = panel.contentView,
-              let bitmap = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { return }
-        view.cacheDisplay(in: view.bounds, to: bitmap)
-        try bitmap.representation(using: .png, properties: [:])?.write(to: url)
-    }
+    /// Entwicklung: Inhalt des Panels für Snapshots (ohne Glas-Unschärfe, die rendert nur der WindowServer).
+    var contentView: NSView? { panel.contentView }
     #endif
 
     // MARK: NSWindowDelegate

@@ -87,6 +87,12 @@ public actor RefreshScheduler {
         planner.favorites = favorites
     }
 
+    /// Takte aus den Einstellungen (Reiter „Aktualisierung“).
+    public func setPolicy(_ policy: RefreshPolicy) {
+        planner.policy = policy
+        sleepTask?.cancel()
+    }
+
     // MARK: Schleife
 
     private func run() async {

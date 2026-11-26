@@ -4,6 +4,7 @@ import Domain
 import Foundation
 import GitHubAPI
 import ModuleKit
+import ModuleUIKit
 import Observation
 import Persistence
 import Sync
@@ -18,9 +19,10 @@ public struct AppConfiguration: Sendable {
     public var environmentToken: StoredToken?
     public var snapshotStore: (any SnapshotStore)?
     public var seenStateStore: any SeenStateStore
-    /// Registrierte Module (Konzept 9.2), Standard: `ModuleRegistry.standard()`.
-    public var modules: ModuleRegistry
-    public var sync: SyncConfiguration
+    public var settingsStore: any SettingsStore
+    /// Module für Daten und Darstellung (Konzept 9.2).
+    public var modules: StandardModules
+    public var batchSize: Int
 
     public init(
         oauthClientID: String?,
@@ -28,16 +30,18 @@ public struct AppConfiguration: Sendable {
         environmentToken: StoredToken? = nil,
         snapshotStore: (any SnapshotStore)? = nil,
         seenStateStore: any SeenStateStore = InMemorySeenStateStore(),
-        modules: ModuleRegistry = ModuleRegistry(),
-        sync: SyncConfiguration = SyncConfiguration()
+        settingsStore: any SettingsStore = InMemorySettingsStore(),
+        modules: StandardModules = StandardModules(authorRules: SharedValue(.default)),
+        batchSize: Int = 10
     ) {
         self.oauthClientID = oauthClientID
         self.tokenStore = tokenStore
         self.environmentToken = environmentToken
         self.snapshotStore = snapshotStore
         self.seenStateStore = seenStateStore
+        self.settingsStore = settingsStore
         self.modules = modules
-        self.sync = sync
+        self.batchSize = batchSize
     }
 
     /// Konfiguration der laufenden App: Schlüsselbund, Cache im Sandbox-Container, Client-ID aus
@@ -49,14 +53,6 @@ public struct AppConfiguration: Sendable {
         let isConfigured = clientID.map { !$0.isEmpty && !$0.hasPrefix("$(") } ?? false
         let snapshotURL = try? JSONFileSnapshotStore.defaultLocation()
         let seenURL = try? JSONFileSnapshotStore.defaultLocation(fileName: "seen.json")
-        let modules: ModuleRegistry
-        do {
-            modules = try .standard()
-        } catch {
-            // Kann nur bei einem fehlerhaften Fragment passieren; Tests verhindern das.
-            assertionFailure("Module nicht registrierbar: \(error)")
-            modules = ModuleRegistry()
-        }
         return AppConfiguration(
             oauthClientID: isConfigured ? clientID : nil,
             tokenStore: KeychainTokenStore(),
@@ -64,9 +60,19 @@ public struct AppConfiguration: Sendable {
             snapshotStore: snapshotURL.map(JSONFileSnapshotStore.init(fileURL:)),
             seenStateStore: seenURL.map { JSONFileSeenStateStore(fileURL: $0) as any SeenStateStore }
                 ?? InMemorySeenStateStore(),
-            modules: modules
+            settingsStore: UserDefaultsSettingsStore()
         )
     }
+}
+
+/// Was das Menüleisten-Symbol zeigt (Konzept 3.1).
+public struct MenuBarIndicator: Equatable {
+    /// Zahl neben dem Symbol (Modus „offene PRs von Menschen“ bzw. „Summe“).
+    public var count: Int?
+    /// Punkt in Akzentfarbe: Neues seit dem letzten Öffnen.
+    public var showsNewDot: Bool
+    /// Roter Punkt: Alarm nach E7.
+    public var showsAlarm: Bool
 }
 
 /// Zentraler UI-Zustand (Konzept 9.3): Anmeldung, zuletzt bekannter Stand, Sync-Status.
@@ -83,39 +89,86 @@ public final class AppModel {
 
     public private(set) var auth: AuthState = .checking
     /// Zuletzt bekannter Stand; kommt beim Start sofort aus dem Cache (Leitprinzip 2).
-    public private(set) var syncState: SyncState?
+    public private(set) var syncState: SyncState? {
+        didSet {
+            ui.repositories = syncState?.repositories ?? []
+            ui.viewerLogin = syncState?.viewerLogin ?? ""
+        }
+    }
     public private(set) var isSyncing = false
     /// Fehler des letzten Durchlaufs; die alten Daten bleiben sichtbar.
     public private(set) var lastError: String?
     public private(set) var nextRetryAt: Date?
     public private(set) var lastChanges: ChangeSet?
     public private(set) var seenState = SeenState()
+    public private(set) var settings: AppSettings
     public var isDeviceFlowAvailable: Bool { deviceFlow != nil }
+    /// Kontext für die Oberfläche der Module.
+    public let ui: ModuleUIContext
+    /// Alle Modul-Oberflächen in fester Reihenfolge; `enabledModuleUIs` berücksichtigt die Einstellungen.
+    public let moduleUIs: [any ModuleUI]
+    /// Nur Debug-Builds: Reiter bzw. Repo, das das Panel beim Öffnen zeigt (`--tab`, `--repo`).
+    public var debugInitialTab: String?
+    public var debugInitialRepository: String?
 
     private let vault: TokenVault
     private let engine: SyncEngine
     private let scheduler: RefreshScheduler
     private let deviceFlow: DeviceFlowAuthenticator?
     private let seenStore: any SeenStateStore
+    private let settingsStore: any SettingsStore
+    private let authorRules: SharedValue<AuthorRules>
     private var signInTask: Task<Void, Never>?
     private var eventsTask: Task<Void, Never>?
     private var systemEvents: SystemEventsMonitor?
     private let logger = Logger(subsystem: "de.pmoscode.repowatch", category: "AppModel")
 
     public init(configuration: AppConfiguration) {
+        settingsStore = configuration.settingsStore
+        let settings = configuration.settingsStore.load()
+        self.settings = settings
+        authorRules = configuration.modules.authorRules
+        authorRules.value = settings.authorRules
+
+        var registry: ModuleRegistry
+        do {
+            registry = try configuration.modules.registry()
+        } catch {
+            // Kann nur bei einem fehlerhaften Fragment passieren; Tests verhindern das.
+            assertionFailure("Module nicht registrierbar: \(error)")
+            registry = ModuleRegistry()
+        }
+        for module in registry.modules {
+            registry.setEnabled(settings.isEnabled(module.id), for: module.id)
+        }
+
         vault = TokenVault(store: configuration.tokenStore, environmentToken: configuration.environmentToken)
         let transport = HTTPTransport(tokenProvider: vault)
+        let graphQL = GraphQLClient(transport: transport)
+        let rest = RESTClient(transport: transport)
         engine = SyncEngine(
-            client: GraphQLClient(transport: transport),
-            rest: RESTClient(transport: transport),
-            registry: configuration.modules,
-            configuration: configuration.sync,
+            client: graphQL,
+            rest: rest,
+            registry: registry,
+            configuration: SyncConfiguration(batchSize: configuration.batchSize, filter: Self.filter(from: settings)),
             store: configuration.snapshotStore
         )
-        scheduler = RefreshScheduler(engine: engine)
+        scheduler = RefreshScheduler(
+            engine: engine,
+            planner: RefreshPlanner(policy: Self.policy(from: settings), favorites: Set(settings.favorites))
+        )
         deviceFlow = configuration.oauthClientID.map { DeviceFlowAuthenticator(clientID: $0) }
         seenStore = configuration.seenStateStore
         seenState = (try? seenStore.load()) ?? SeenState()
+        moduleUIs = configuration.modules.userInterfaces()
+        ui = ModuleUIContext(services: ModuleServices(graphQL: graphQL, rest: rest))
+        ui.settings = settings
+        ui.seen = seenState
+
+        ui.showRepositoryAction = { [weak self] id in self?.requestedRepositoryID = id }
+        ui.markSeenAction = { [weak self] id in self?.markSeen(id) }
+        ui.toggleFavoriteAction = { [weak self] name in self?.toggleFavorite(name) }
+        ui.updateSettingsAction = { [weak self] change in self?.updateSettings(change) }
 
         eventsTask = Task { [weak self, events = scheduler.events] in
             for await event in events {
@@ -126,6 +179,9 @@ public final class AppModel {
             self?.systemDidWake()
         }
     }
+
+    /// Repo, das die Oberfläche anzeigen soll (z. B. aus einem Modul-Reiter heraus).
+    public var requestedRepositoryID: String?
 
     public var isSignedIn: Bool {
         if case .signedIn = auth { true } else { false }
@@ -238,6 +294,7 @@ public final class AppModel {
         lastChanges = nil
         auth = .signedOut(message: message)
         seenState = SeenState()
+        ui.seen = seenState
         try? seenStore.clear()
         Task {
             await scheduler.stop()
@@ -270,11 +327,120 @@ public final class AppModel {
     public func panelDidClose() {
         guard isSignedIn else { return }
         seenState.panelOpenedAt = Date()
+        saveSeenState()
+    }
+
+    /// Repo als gesehen markieren (Kontextmenü, Detailansicht).
+    public func markSeen(_ repositoryID: String) {
+        seenState.repositorySeenAt[repositoryID] = Date()
+        saveSeenState()
+    }
+
+    private func saveSeenState() {
+        ui.seen = seenState
         do {
             try seenStore.save(seenState)
         } catch {
             logger.error("Gesehen-Stand nicht gespeichert: \(error.localizedDescription, privacy: .public)")
         }
+    }
+
+    // MARK: Einstellungen
+
+    public func toggleFavorite(_ nameWithOwner: String) {
+        updateSettings { settings in
+            if let index = settings.favorites.firstIndex(of: nameWithOwner) {
+                settings.favorites.remove(at: index)
+            } else {
+                settings.favorites.append(nameWithOwner)
+            }
+        }
+    }
+
+    /// Ändert Einstellungen, speichert sie und gibt sie an Sync und Module weiter.
+    public func updateSettings(_ change: (inout AppSettings) -> Void) {
+        let old = settings
+        var new = settings
+        change(&new)
+        guard new != old else { return }
+        settings = new
+        ui.settings = new
+        settingsStore.save(new)
+
+        var needsResync = false
+        if Self.filter(from: new) != Self.filter(from: old) { needsResync = true }
+        if new.authorRules != old.authorRules {
+            authorRules.value = new.authorRules
+            needsResync = true
+        }
+        let modulesChanged = new.disabledModules != old.disabledModules
+        needsResync = needsResync || modulesChanged
+        let favoritesChanged = new.favorites != old.favorites
+        let policyChanged = Self.policy(from: new) != Self.policy(from: old)
+
+        Task {
+            if Self.filter(from: new) != Self.filter(from: old) {
+                await engine.updateFilter(Self.filter(from: new))
+            }
+            if modulesChanged {
+                for module in moduleUIs {
+                    await engine.setModule(module.moduleID, enabled: new.isEnabled(module.moduleID))
+                }
+            }
+            if favoritesChanged { await scheduler.setFavorites(Set(new.favorites)) }
+            if policyChanged { await scheduler.setPolicy(Self.policy(from: new)) }
+            if needsResync && isSignedIn { await scheduler.trigger(.manual) }
+        }
+    }
+
+    public var enabledModuleUIs: [any ModuleUI] {
+        moduleUIs.filter { settings.isEnabled($0.moduleID) }
+    }
+
+    static func filter(from settings: AppSettings) -> SyncFilter {
+        SyncFilter(
+            includeArchived: settings.includeArchived,
+            includeForks: settings.includeForks,
+            excludedOwners: Set(settings.excludedOwners),
+            excludedPatterns: settings.excludedPatterns
+        )
+    }
+
+    static func policy(from settings: AppSettings) -> RefreshPolicy {
+        var policy = RefreshPolicy()
+        policy.activeInterval = TimeInterval(max(1, settings.activeIntervalMinutes) * 60)
+        policy.dormantInterval = TimeInterval(max(5, settings.dormantIntervalMinutes) * 60)
+        return policy
+    }
+
+    // MARK: Neu und Menüleiste
+
+    /// Gibt es in diesem Repo etwas seit dem letzten Blick? (Konzept 3.2)
+    public func hasNews(_ repository: RepoSnapshot) -> Bool {
+        guard let since = ui.newSince(repositoryID: repository.id) else { return false }
+        if let pushed = repository.meta.pushedAt, pushed > since { return true }
+        return enabledModuleUIs.contains { $0.hasNews(in: repository, since: since) }
+    }
+
+    /// Anzeige in der Menüleiste (Konzept 3.1, E7).
+    public var menuBarIndicator: MenuBarIndicator {
+        let repositories = repositories
+        let alarm = settings.alarmDotEnabled && repositories.contains { repository in
+            repository.summaries.contains { settings.isEnabled($0.key) && $0.value.needsAttention }
+        }
+        let count: Int? = switch settings.menuBarMode {
+        case .personPullRequests:
+            repositories.reduce(0) { total, repository in
+                let counts = repository.summaries[ModuleID("prs")]?.counts ?? [:]
+                return total + (counts["human"] ?? 0) + (counts["me"] ?? 0)
+            }
+        case .openItems:
+            repositories.reduce(0) { $0 + $1.meta.openIssueCount + $1.meta.openPullRequestCount }
+        case .none, .newItemsDot:
+            nil
+        }
+        let showsNew = settings.menuBarMode == .newItemsDot && repositories.contains(where: hasNews)
+        return MenuBarIndicator(count: count, showsNewDot: showsNew, showsAlarm: alarm)
     }
 
     private func systemDidWake() {

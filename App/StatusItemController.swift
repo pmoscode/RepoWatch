@@ -8,6 +8,7 @@ import Features
 @MainActor
 final class StatusItemController: NSObject {
     var onToggle: (() -> Void)?
+    var onOpenSettings: (() -> Void)?
 
     private let statusItem: NSStatusItem
     private let model: AppModel
@@ -52,6 +53,8 @@ final class StatusItemController: NSObject {
         let menu = NSMenu()
         menu.addItem(withTitle: String(localized: "Aktualisieren"), action: #selector(refresh), keyEquivalent: "r")
             .target = self
+        menu.addItem(withTitle: String(localized: "Einstellungen …"), action: #selector(openSettings), keyEquivalent: ",")
+            .target = self
         menu.addItem(.separator())
         menu.addItem(withTitle: String(localized: "RepoWatch beenden"), action: #selector(quit), keyEquivalent: "q")
             .target = self
@@ -60,6 +63,7 @@ final class StatusItemController: NSObject {
     }
 
     @objc private func refresh() { model.refresh() }
+    @objc private func openSettings() { onOpenSettings?() }
     @objc private func quit() { NSApp.terminate(nil) }
 
     // MARK: Anzeige
@@ -76,22 +80,35 @@ final class StatusItemController: NSObject {
     private func updateButton() {
         guard let button = statusItem.button else { return }
         guard model.isSignedIn else {
-            button.title = ""
+            button.attributedTitle = NSAttributedString()
             button.appearsDisabled = true
             button.toolTip = String(localized: "RepoWatch – nicht angemeldet")
             return
         }
-        if let message = model.lastError {
-            button.title = ""
-            button.appearsDisabled = true
-            button.toolTip = message
-        } else {
-            let count = model.visibleRepositories.count
-            button.title = model.syncState == nil ? "" : " \(count)"
-            button.appearsDisabled = false
-            button.toolTip = model.syncState == nil
-                ? "RepoWatch"
-                : String(localized: "RepoWatch – \(count) Repositories")
+        let indicator = model.menuBarIndicator
+        button.appearsDisabled = model.lastError != nil && model.syncState == nil
+        button.attributedTitle = Self.title(for: indicator)
+
+        var tooltip = [String(localized: "RepoWatch – \(model.repositories.count) Repositories")]
+        if indicator.showsAlarm { tooltip.append(String(localized: "Workflow fehlgeschlagen")) }
+        if indicator.showsNewDot { tooltip.append(String(localized: "Neues seit dem letzten Öffnen")) }
+        if let message = model.lastError { tooltip.append(message) }
+        button.toolTip = tooltip.joined(separator: "\n")
+    }
+
+    /// Zähler und Punkte neben dem Symbol (Konzept 3.1): Zahl, Punkt in Akzentfarbe bei Neuem,
+    /// roter Punkt bei Alarm (E7).
+    static func title(for indicator: MenuBarIndicator) -> NSAttributedString {
+        let font = NSFont.menuBarFont(ofSize: 0)
+        let title = NSMutableAttributedString()
+        if let count = indicator.count {
+            title.append(NSAttributedString(string: " \(count)", attributes: [.font: font]))
         }
+        if indicator.showsAlarm {
+            title.append(NSAttributedString(string: " ●", attributes: [.font: font, .foregroundColor: NSColor.systemRed]))
+        } else if indicator.showsNewDot {
+            title.append(NSAttributedString(string: " ●", attributes: [.font: font, .foregroundColor: NSColor.controlAccentColor]))
+        }
+        return title
     }
 }

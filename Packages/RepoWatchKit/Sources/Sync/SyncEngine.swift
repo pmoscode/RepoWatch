@@ -45,7 +45,7 @@ public actor SyncEngine {
     private let inventoryFetcher: InventoryFetcher
     private let detailFetcher: DetailFetcher
     private let rest: RESTClient
-    private let registry: ModuleRegistry
+    private var registry: ModuleRegistry
     private let store: (any SnapshotStore)?
     private let now: @Sendable () -> Date
     private var configuration: SyncConfiguration
@@ -98,6 +98,13 @@ public actor SyncEngine {
         try? store?.clear()
         await rest.clearCache()
     }
+
+    /// Module an/aus (Einstellungen, Reiter „Module“). Abgeschaltete Module werden nicht mehr abgefragt.
+    public func setModule(_ id: ModuleID, enabled: Bool) {
+        registry.setEnabled(enabled, for: id)
+    }
+
+    public var filter: SyncFilter { configuration.filter }
 
     public func updateFilter(_ filter: SyncFilter) {
         configuration.filter = filter

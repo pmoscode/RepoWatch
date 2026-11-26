@@ -44,11 +44,11 @@ public struct ActionsModule: InsightModule {
     public static let activeWindow: TimeInterval = 7 * 86_400
 
     public let metadata = ModuleMetadata(title: String(localized: "Actions"), systemImage: "gearshape.2", defaultOrder: 40)
-    private let classifier: AuthorClassifier
+    private let rules: SharedValue<AuthorRules>
     private let now: @Sendable () -> Date
 
-    public init(rules: AuthorRules = .default, now: @escaping @Sendable () -> Date = Date.init) {
-        classifier = .standard(rules)
+    public init(rules: SharedValue<AuthorRules> = SharedValue(.default), now: @escaping @Sendable () -> Date = Date.init) {
+        self.rules = rules
         self.now = now
     }
 
@@ -188,7 +188,7 @@ public struct ActionsModule: InsightModule {
 
     /// Autor-Art eines Runs: für PR-Läufe über Actor und Branch (Renovate-Branches, Bots).
     public func authorKind(of run: WorkflowRunSummary, viewerLogin: String) -> AuthorKind {
-        classifier.classify(AuthorInput(login: run.actor, branch: run.branch), viewerLogin: viewerLogin)
+        AuthorClassifier.standard(rules.value).classify(AuthorInput(login: run.actor, branch: run.branch), viewerLogin: viewerLogin)
     }
 
     /// Workflow-Zustände, die nach E7 Alarm auslösen: Standard-Branch oder PR eines Menschen (inkl. mir).
