@@ -33,13 +33,13 @@ let package = Package(
         .target(
             name: "Features",
             dependencies: [
-                "Domain", "GitHubAPI", "Auth", "Sync", "DesignSystem",
+                "Domain", "GitHubAPI", "Auth", "Sync", "ModuleKit", "Persistence", "DesignSystem",
                 "IssuesModule", "PullRequestsModule", "ActivityModule", "ActionsModule",
             ]
         ),
 
         // Gemeinsame Test-Hilfen (URLProtocol-Mock, Sleep-Aufzeichnung); nur für Test-Targets.
-        .target(name: "TestSupport", path: "Tests/TestSupport"),
+        .target(name: "TestSupport", dependencies: ["Domain", "ModuleKit"], path: "Tests/TestSupport"),
 
         .testTarget(
             name: "GitHubAPITests",
@@ -50,8 +50,16 @@ let package = Package(
             dependencies: ["Auth", "GitHubAPI", "TestSupport"]
         ),
         .testTarget(
+            name: "ModuleKitTests",
+            dependencies: ["ModuleKit", "Domain", "TestSupport"]
+        ),
+        .testTarget(
+            name: "PersistenceTests",
+            dependencies: ["Persistence", "Domain", "TestSupport"]
+        ),
+        .testTarget(
             name: "SyncTests",
-            dependencies: ["Sync", "GitHubAPI", "Domain"],
+            dependencies: ["Sync", "GitHubAPI", "Domain", "ModuleKit", "Persistence", "TestSupport"],
             resources: [.copy("Fixtures")]
         ),
     ]

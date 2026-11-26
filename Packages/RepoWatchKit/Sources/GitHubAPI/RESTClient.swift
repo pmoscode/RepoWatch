@@ -51,6 +51,22 @@ public actor RESTClient {
         url: URL,
         as type: Value.Type = Value.self
     ) async throws -> RESTResponse<Value> {
+        let raw = try await fetch(url: url)
+        let value: Value
+        do {
+            value = try decoder.decode(Value.self, from: raw.value)
+        } catch {
+            throw GitHubAPIError.decoding(String(describing: error))
+        }
+        return RESTResponse(value: value, isFromCache: raw.isFromCache, nextPage: raw.nextPage)
+    }
+
+    /// Rohe Antwort, z. B. für Modul-Folgeanfragen, die selbst dekodieren.
+    public func getData(_ path: String, query: [URLQueryItem] = []) async throws -> RESTResponse<Data> {
+        try await fetch(url: url(for: path, query: query))
+    }
+
+    private func fetch(url: URL) async throws -> RESTResponse<Data> {
         var request = URLRequest(url: url)
         request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
         request.setValue("2022-11-28", forHTTPHeaderField: "X-GitHub-Api-Version")
@@ -77,15 +93,8 @@ public actor RESTClient {
                 store(CachedBody(etag: etag, body: data), for: url)
             }
         }
-
-        let value: Value
-        do {
-            value = try decoder.decode(Value.self, from: body)
-        } catch {
-            throw GitHubAPIError.decoding(String(describing: error))
-        }
         return RESTResponse(
-            value: value,
+            value: body,
             isFromCache: isFromCache,
             nextPage: Self.nextPage(fromLinkHeader: response.value(forHTTPHeaderField: "link"))
         )

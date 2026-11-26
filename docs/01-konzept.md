@@ -384,6 +384,10 @@ public protocol InsightModule: Sendable {
 }
 ```
 
+> **Stand Phase 2:** Umgesetzt ist der Daten-Teil (`InsightModule` in `ModuleKit`, Punkte 1–3 plus
+> Folgeanfragen und Änderungen). Die Darstellung (Punkt 4) kommt in Phase 4 als eigenes Protokoll,
+> damit `ModuleKit` ohne SwiftUI testbar bleibt.
+
 Der `QueryBuilder` setzt die Fragmente aller aktiven Module zu **einer** Detail-Abfrage
 zusammen. Ein neues Modul (z. B. „Releases“) ist damit eine neue Datei mit Fragment,
 Payload und Views, ohne Änderungen am Sync-Kern.

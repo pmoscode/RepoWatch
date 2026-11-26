@@ -1,3 +1,4 @@
+import Domain
 import ModuleKit
 
 // Phase 3: Umsetzung des PullRequests-Moduls.

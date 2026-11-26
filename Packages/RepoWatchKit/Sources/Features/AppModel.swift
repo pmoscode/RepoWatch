@@ -3,7 +3,9 @@ import Auth
 import Domain
 import Foundation
 import GitHubAPI
+import ModuleKit
 import Observation
+import Persistence
 import Sync
 import os
 
@@ -14,28 +16,51 @@ public struct AppConfiguration: Sendable {
     public var tokenStore: any TokenStore
     /// Nur Debug-Builds: `GITHUB_TOKEN` hat Vorrang vor dem Schlüsselbund.
     public var environmentToken: StoredToken?
+    public var snapshotStore: (any SnapshotStore)?
+    public var seenStateStore: any SeenStateStore
+    /// Registrierte Module (Konzept 9.2). Phase 3 füllt die Liste.
+    public var modules: ModuleRegistry
+    public var sync: SyncConfiguration
 
-    public init(oauthClientID: String?, tokenStore: any TokenStore, environmentToken: StoredToken? = nil) {
+    public init(
+        oauthClientID: String?,
+        tokenStore: any TokenStore,
+        environmentToken: StoredToken? = nil,
+        snapshotStore: (any SnapshotStore)? = nil,
+        seenStateStore: any SeenStateStore = InMemorySeenStateStore(),
+        modules: ModuleRegistry = ModuleRegistry(),
+        sync: SyncConfiguration = SyncConfiguration()
+    ) {
         self.oauthClientID = oauthClientID
         self.tokenStore = tokenStore
         self.environmentToken = environmentToken
+        self.snapshotStore = snapshotStore
+        self.seenStateStore = seenStateStore
+        self.modules = modules
+        self.sync = sync
     }
 
-    /// Konfiguration der laufenden App: Schlüsselbund, Client-ID aus der Info.plist und in
-    /// Debug-Builds optional `GITHUB_TOKEN`. So muss die App-Schicht `Auth` nicht kennen.
+    /// Konfiguration der laufenden App: Schlüsselbund, Cache im Sandbox-Container, Client-ID aus
+    /// der Info.plist und in Debug-Builds optional `GITHUB_TOKEN`. So muss die App-Schicht
+    /// weder `Auth` noch `Persistence` kennen.
     public static func live(bundle: Bundle = .main, allowEnvironmentToken: Bool) -> AppConfiguration {
         let clientID = (bundle.object(forInfoDictionaryKey: "GitHubOAuthClientID") as? String)?
             .trimmingCharacters(in: .whitespaces)
         let isConfigured = clientID.map { !$0.isEmpty && !$0.hasPrefix("$(") } ?? false
+        let snapshotURL = try? JSONFileSnapshotStore.defaultLocation()
+        let seenURL = try? JSONFileSnapshotStore.defaultLocation(fileName: "seen.json")
         return AppConfiguration(
             oauthClientID: isConfigured ? clientID : nil,
             tokenStore: KeychainTokenStore(),
-            environmentToken: allowEnvironmentToken ? EnvironmentToken.read() : nil
+            environmentToken: allowEnvironmentToken ? EnvironmentToken.read() : nil,
+            snapshotStore: snapshotURL.map(JSONFileSnapshotStore.init(fileURL:)),
+            seenStateStore: seenURL.map { JSONFileSeenStateStore(fileURL: $0) as any SeenStateStore }
+                ?? InMemorySeenStateStore()
         )
     }
 }
 
-/// Zentraler UI-Zustand (Konzept 9.3): Anmeldung und Bestand.
+/// Zentraler UI-Zustand (Konzept 9.3): Anmeldung, zuletzt bekannter Stand, Sync-Status.
 @MainActor
 @Observable
 public final class AppModel {
@@ -47,53 +72,79 @@ public final class AppModel {
         case signedIn(login: String, kind: StoredToken.Kind)
     }
 
-    public enum LoadState: Equatable {
-        case idle
-        case loading
-        case loaded
-        case failed(String)
-    }
-
     public private(set) var auth: AuthState = .checking
-    public private(set) var state: LoadState = .idle
-    public private(set) var inventory: InventorySnapshot?
+    /// Zuletzt bekannter Stand; kommt beim Start sofort aus dem Cache (Leitprinzip 2).
+    public private(set) var syncState: SyncState?
+    public private(set) var isSyncing = false
+    /// Fehler des letzten Durchlaufs; die alten Daten bleiben sichtbar.
+    public private(set) var lastError: String?
+    public private(set) var nextRetryAt: Date?
+    public private(set) var lastChanges: ChangeSet?
+    public private(set) var seenState = SeenState()
     public var isDeviceFlowAvailable: Bool { deviceFlow != nil }
 
     private let vault: TokenVault
-    private let transport: HTTPTransport
-    private let fetcher: InventoryFetcher
+    private let engine: SyncEngine
+    private let scheduler: RefreshScheduler
     private let deviceFlow: DeviceFlowAuthenticator?
-    private var refreshTask: Task<Void, Never>?
+    private let seenStore: any SeenStateStore
     private var signInTask: Task<Void, Never>?
+    private var eventsTask: Task<Void, Never>?
+    private var systemEvents: SystemEventsMonitor?
     private let logger = Logger(subsystem: "de.pmoscode.repowatch", category: "AppModel")
 
     public init(configuration: AppConfiguration) {
         vault = TokenVault(store: configuration.tokenStore, environmentToken: configuration.environmentToken)
-        transport = HTTPTransport(tokenProvider: vault)
-        fetcher = InventoryFetcher(client: GraphQLClient(transport: transport))
+        let transport = HTTPTransport(tokenProvider: vault)
+        engine = SyncEngine(
+            client: GraphQLClient(transport: transport),
+            rest: RESTClient(transport: transport),
+            registry: configuration.modules,
+            configuration: configuration.sync,
+            store: configuration.snapshotStore
+        )
+        scheduler = RefreshScheduler(engine: engine)
         deviceFlow = configuration.oauthClientID.map { DeviceFlowAuthenticator(clientID: $0) }
+        seenStore = configuration.seenStateStore
+        seenState = (try? seenStore.load()) ?? SeenState()
+
+        eventsTask = Task { [weak self, events = scheduler.events] in
+            for await event in events {
+                self?.handle(event)
+            }
+        }
+        systemEvents = SystemEventsMonitor { [weak self] in
+            self?.systemDidWake()
+        }
     }
 
     public var isSignedIn: Bool {
         if case .signedIn = auth { true } else { false }
     }
 
-    public var visibleRepositories: [RepoMeta] {
-        (inventory?.repositories ?? []).filter { !$0.isArchived }
-    }
+    public var repositories: [RepoSnapshot] { syncState?.repositories ?? [] }
+    public var visibleRepositories: [RepoMeta] { repositories.map(\.meta) }
 
     // MARK: Start
 
-    /// Liest das gespeicherte Token und lädt bei Erfolg den Bestand.
+    /// Liest Token und Cache. Mit Token: Cache sofort anzeigen, dann im Hintergrund aktualisieren.
     public func start() {
         Task {
             do {
-                if let token = try await vault.current() {
-                    auth = .signedIn(login: token.login ?? "", kind: token.kind)
-                    refresh()
-                } else {
+                guard let token = try await vault.current() else {
                     auth = .signedOut(message: nil)
+                    return
                 }
+                if let restored = await engine.restore() {
+                    if let login = token.login, !restored.viewerLogin.isEmpty, login != restored.viewerLogin {
+                        // Cache gehört zu einem anderen Konto.
+                        await engine.reset()
+                    } else {
+                        syncState = restored
+                    }
+                }
+                auth = .signedIn(login: token.login ?? syncState?.viewerLogin ?? "", kind: token.kind)
+                await scheduler.start(with: .launch)
             } catch {
                 logger.error("Token nicht lesbar: \(error.localizedDescription, privacy: .public)")
                 auth = .signedOut(message: error.localizedDescription)
@@ -145,7 +196,7 @@ public final class AppModel {
         auth = .signedOut(message: nil)
     }
 
-    /// Prüft das Token mit `viewer { login }`, speichert es und lädt den Bestand.
+    /// Prüft das Token mit `viewer { login }`, speichert es und startet den Sync.
     private func completeSignIn(token: String, kind: StoredToken.Kind) async throws {
         auth = .validating
         let probe = GraphQLClient(transport: HTTPTransport(tokenProvider: StaticTokenProvider(token), retryPolicy: .none))
@@ -153,8 +204,10 @@ public final class AppModel {
         try Task.checkCancellation()
         try await vault.save(StoredToken(value: token, kind: kind, login: login))
         logger.info("Angemeldet (\(kind.rawValue, privacy: .public))")
+        await engine.reset()
+        syncState = nil
         auth = .signedIn(login: login, kind: kind)
-        refresh()
+        await scheduler.start(with: .launch)
     }
 
     /// Kopiert den Code und öffnet die Bestätigungsseite von GitHub.
@@ -167,13 +220,19 @@ public final class AppModel {
 
     // MARK: Abmelden
 
+    /// Löscht Token, Cache und „Gesehen“-Stand (Konzept 11).
     public func signOut(message: String? = nil) {
         signInTask?.cancel()
-        refreshTask?.cancel()
-        inventory = nil
-        state = .idle
+        syncState = nil
+        isSyncing = false
+        lastError = nil
+        lastChanges = nil
         auth = .signedOut(message: message)
+        seenState = SeenState()
+        try? seenStore.clear()
         Task {
+            await scheduler.stop()
+            await engine.reset()
             do {
                 try await vault.clear()
                 logger.info("Abgemeldet")
@@ -184,35 +243,57 @@ public final class AppModel {
         }
     }
 
-    // MARK: Laden
+    // MARK: Aktualisieren
 
+    /// ⌘R bzw. „Aktualisieren“: alles sofort.
     public func refresh() {
         guard isSignedIn else { return }
-        refreshTask?.cancel()
-        state = .loading
-        refreshTask = Task { [fetcher, logger] in
-            do {
-                let snapshot = try await fetcher.fetchAll()
-                guard !Task.isCancelled else { return }
-                logger.info(
-                    "Bestand geladen: \(snapshot.repositories.count) Repos, \(snapshot.pageCount) Seite(n), Kosten \(snapshot.totalCost)"
-                )
-                inventory = snapshot
-                state = .loaded
-                if case .signedIn(let login, let kind) = auth, login != snapshot.viewerLogin {
-                    auth = .signedIn(login: snapshot.viewerLogin, kind: kind)
-                }
-            } catch is CancellationError {
-                return
-            } catch GitHubAPIError.unauthorized {
-                guard !Task.isCancelled else { return }
-                logger.error("Token abgelehnt, melde ab")
-                signOut(message: String(localized: "GitHub hat das Token nicht mehr akzeptiert. Bitte neu anmelden."))
-            } catch {
-                guard !Task.isCancelled else { return }
-                logger.error("Bestand fehlgeschlagen: \(error.localizedDescription, privacy: .public)")
-                state = .failed(error.localizedDescription)
+        Task { await scheduler.trigger(.manual) }
+    }
+
+    /// Panel geöffnet: aktive Repos mit älteren Daten nachladen, „gesehen“ merken.
+    public func panelDidOpen() {
+        guard isSignedIn else { return }
+        Task { await scheduler.trigger(.panelOpened) }
+    }
+
+    /// Panel geschlossen: Ab jetzt gilt alles Neue als „neu seit dem letzten Öffnen“.
+    public func panelDidClose() {
+        guard isSignedIn else { return }
+        seenState.panelOpenedAt = Date()
+        do {
+            try seenStore.save(seenState)
+        } catch {
+            logger.error("Gesehen-Stand nicht gespeichert: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    private func systemDidWake() {
+        guard isSignedIn else { return }
+        Task { await scheduler.trigger(.wake) }
+    }
+
+    private func handle(_ event: SyncEvent) {
+        guard isSignedIn else { return }
+        switch event {
+        case .started:
+            isSyncing = true
+        case .finished(let outcome):
+            isSyncing = false
+            lastError = nil
+            nextRetryAt = nil
+            syncState = outcome.state
+            if !outcome.changes.isEmpty { lastChanges = outcome.changes }
+            if case .signedIn(let login, let kind) = auth, login != outcome.state.viewerLogin, !outcome.state.viewerLogin.isEmpty {
+                auth = .signedIn(login: outcome.state.viewerLogin, kind: kind)
             }
+        case .failed(.unauthorized, _):
+            logger.error("Token abgelehnt, melde ab")
+            signOut(message: String(localized: "GitHub hat das Token nicht mehr akzeptiert. Bitte neu anmelden."))
+        case .failed(let error, let retryAt):
+            isSyncing = false
+            lastError = error.localizedDescription
+            nextRetryAt = retryAt
         }
     }
 }

@@ -75,13 +75,13 @@ Ziel: Ungewissheiten früh klären, bevor Architektur-Code entsteht.
 - [x] Rate-Limit: `x-ratelimit-*` je Ressource merken; primäres Limit → `.rateLimited(resetAt)` und keine weiteren Anfragen bis zum Reset; sekundäres Limit → `Retry-After` abwarten
 - [x] Fehlertypen: `offline`, `unauthorized`, `rateLimited(resetAt)`, `server`, `http`, `decoding`, `pending`
 - [x] `KeychainTokenStore`: speichern/lesen/löschen (Generic Password, nicht synchronisiert); `TokenVault` hält das Token im Speicher
-- [ ] **OAuth-App registrieren** (von dir, siehe Anleitung unten) und Client-ID in `project.yml` eintragen
-- [ ] OAuth-App in den ca. 5 eigenen Organisationen freigeben (falls dort OAuth-Beschränkungen aktiv sind) und prüfen, dass deren Repos vollständig erscheinen
+- [x] **OAuth-App registrieren** (siehe Anleitung unten) und Client-ID in `project.yml` eintragen
+- [x] OAuth-App in den ca. 5 eigenen Organisationen freigeben (falls dort OAuth-Beschränkungen aktiv sind) und prüfen, dass deren Repos vollständig erscheinen
 - [x] `DeviceFlowAuthenticator`: Code anfordern → Code + Link anzeigen → pollen (`interval`, `slow_down`, `expired_token`, `access_denied`)
 - [x] PAT-Eingabe als Alternative, Token mit `viewer { login }` prüfen
 - [x] Anmelde-Ansicht (erstes Öffnen), Konto-Menü mit Abmelden (löscht Token); bei HTTP 401 automatisch abmelden mit Hinweis
 - [x] Tests: `URLProtocol`-Mock (`TestSupport`), Device-Flow-Ablauf, Rate-Limit und Backoff, Drosselung, ETag, Schlüsselbund (32 Tests)
-- [ ] **Von Hand prüfen:** Anmeldung per PAT, per Device Flow (nach Eintrag der Client-ID), Neustart ohne erneute Anmeldung, Abmelden
+- [x] **Von Hand geprüft (26.11.2026):** Anmeldung per PAT, per Device Flow, Neustart ohne erneute Anmeldung, Abmelden
 
 `GITHUB_TOKEN` funktioniert weiterhin, aber nur in Debug-Builds und mit Vorrang vor dem Schlüsselbund.
 
@@ -102,25 +102,27 @@ Ziel: Ungewissheiten früh klären, bevor Architektur-Code entsteht.
 
 Das Herzstück. Hier entscheidet sich, ob die App später leicht erweiterbar bleibt.
 
-- [ ] **Domain:** `RepoRef`, `RepoMeta`, `RepoSnapshot { meta, payloads: [ModuleID: AnyPayload], fetchedAt }`, `ChangeSet`, `ModuleSummary`
-- [ ] **ModuleKit:**
-  - [ ] `InsightModule`-Protokoll + Typlöschung `AnyInsightModule`
-  - [ ] `ModuleRegistry` (Reihenfolge, an/aus aus den Einstellungen)
-  - [ ] `QueryBuilder`: setzt die Fragmente aller aktiven Module zu einer `nodes(ids:)`-Abfrage zusammen; erkennt doppelte Feldnamen schon beim Registrieren
-  - [ ] **Paketgröße nach Rechenzeit** (Konzept 4.3): Standard 10 Repos pro Detail-Anfrage, 2–3 parallel; bei HTTP 502/504 oder Timeout Paket halbieren und erneut versuchen; gemessene Dauer pro Paket loggen
-  - [ ] Haken `supplementaryRequests` für REST-Folgeanfragen der Module (gedrosselt, mit ETag)
-  - [ ] Test-Modul zum Prüfen der Mechanik
-- [ ] **Sync:**
-  - [ ] `SyncEngine` (actor): Bestand (seitenweise) → Repos in aktiv/ruhend einteilen → Details in Paketen von 10 IDs (siehe unten) → Snapshots zusammenführen
-  - [ ] Filter anwenden (archiviert, Forks, Organisationen, Ausschluss-Muster), bevor Details geladen werden
-  - [ ] `RefreshScheduler`: Takte pro Stufe (aktiv, ruhend, Bestand, Kurztakt bei laufenden Runs), Auslöser (Popover geöffnet, Aufwachen über `NSWorkspace.didWakeNotification`, Netzwerk über `NWPathMonitor`, manuell), Backoff
-  - [ ] `ChangeDetector`: alter vs. neuer Snapshot → neu/geschlossen/geändert
-  - [ ] Offen aus Phase 0: beobachten, ob `pushedAt`/`updatedAt` Änderungen an Issues/PRs zuverlässig anzeigen (sonst Einteilung aktiv/ruhend nur über die Detaildaten)
-- [ ] **Persistence:** `SnapshotStore` (JSON, atomar schreiben, Versionsfeld für spätere Migrationen), `SeenStateStore`
-- [ ] **AppModel** (`@MainActor @Observable`): lädt beim Start den Cache (sofort sichtbar) und startet dann den Scheduler
-- [ ] Tests: QueryBuilder (Ausgabe-Snapshot), SyncEngine mit Fixtures, ChangeDetector, Laden/Speichern des Cache
+- [x] **Domain:** `RepoMeta`, `RepoSnapshot { meta, payloads: [ModuleID: AnyPayload], summaries, detailsFetchedAt, lastDetailError }`, `SyncState`, `Change`/`ChangeSet`, `ModuleSummary` (Zähler, `needsAttention`, `wantsFrequentRefresh`), `ModulePayload`
+- [x] **ModuleKit:**
+  - [x] `InsightModule`-Protokoll (Fragment, Dekodieren, Zusammenfassung, Folgeanfragen, Änderungen) + Typlöschung `AnyInsightModule`. Die **Darstellung** kommt in Phase 4 als eigenes Protokoll, damit ModuleKit ohne SwiftUI testbar bleibt
+  - [x] `ModuleRegistry` (Reihenfolge, an/aus); prüft beim Registrieren: Präfix `m_<id>_` für jedes Feld der obersten Ebene, keine doppelten Felder oder Module, keine Inline-Fragmente oben
+  - [x] `QueryBuilder`: setzt die Fragmente aller aktiven Module zu einer `nodes(ids:)`-Abfrage zusammen, deklariert nur die benötigten Variablen (`since7d`, `since30d`, `updatedSince7d`)
+  - [x] **Paketgröße nach Rechenzeit** (Konzept 4.3): 10 Repos pro Detail-Anfrage, 3 Pakete parallel; bei HTTP 502/504 Paket halbieren und erneut versuchen; Dauer und Kosten pro Paket im Log
+  - [x] `supplementaryRequests` + `merge(…, previous:)` für REST-Folgeanfragen der Module (gedrosselt über den Transport, mit ETag); fehlgeschlagene Folgeanfragen können den alten Stand behalten
+  - [x] Test-Modul `CountModule` (in `TestSupport`)
+- [x] **Sync:**
+  - [x] `SyncEngine` (actor): Bestand → Filter → Details in Paketen → Folgeanfragen → Änderungen → speichern. Fehler einzelner Repos/Pakete brechen nicht ab, diese Repos behalten ihren Stand; 401/offline/Rate-Limit brechen ab, ohne den Stand zu verändern
+  - [x] `SyncFilter` (archiviert, Forks, Owner, Glob-Muster), angewendet vor den Details
+  - [x] `RefreshPlanner` (reine Logik): Stufen Kurztakt/aktiv/ruhend, Fälligkeiten, Bestand alle 30 Min., Auslöser `launch`/`manual` = alles, `panelOpened` = aktive Repos mit Daten > 1 Min., `wake` = Fälliges mit früherem Bestand
+  - [x] `RefreshScheduler` (actor): schläft bis zur nächsten Fälligkeit (max. 60 s), wacht bei Auslösern sofort auf, Backoff 30 s → 15 Min., bei Rate-Limit bis zum Reset; meldet `started`/`finished`/`failed` als `AsyncStream`
+  - [x] Auslöser in der App: Panel öffnen, Aufwachen (`NSWorkspace.didWakeNotification`), Netzwerk wieder da (`NWPathMonitor`), ⌘R
+  - [x] `ChangeDetector`: neue/entfernte Repos, Push, Modul-Änderungen; beim ersten Durchlauf keine Meldungen
+  - [ ] Offen aus Phase 0: ob `pushedAt`/`updatedAt` Änderungen an Issues/PRs zuverlässig anzeigen. **Die Beobachtung läuft jetzt** (Log-Zeile „Aktivitäts-Signal: n mit, m ohne Änderung“); auswerten, sobald die echten Module aus Phase 3 Daten liefern
+- [x] **Persistence:** `JSONFileSnapshotStore` (Versionsfeld, atomar, Zeitpunkte verlustfrei), `JSONFileSeenStateStore` („neu seit dem letzten Öffnen“); beides im Sandbox-Container, beim Abmelden gelöscht
+- [x] **AppModel:** zeigt beim Start sofort den Cache, startet dann den Scheduler; Fehler lassen die alten Daten sichtbar („Stand von …“, nächster Versuch im Tooltip)
+- [x] Tests: Registry und QueryBuilder (Ausgabe-Snapshot), RepoSnapshot-Kodierung, SyncEngine gegen GitHub-Simulator (Filter, Pakete, 502-Halbierung, nicht abrufbare Repos, Änderungen, ETag, Cache, 401, Abmelden), Planer, Scheduler, Speicher (insgesamt 63 Tests)
 
-**Fertig, wenn:** Ein Sync-Durchlauf im Test (oder über eine Debug-Schaltfläche) Snapshots für alle Repos erzeugt und der zweite Start die Daten offline sofort anzeigt.
+**Fertig, wenn:** Ein Sync-Durchlauf im Test (oder über eine Debug-Schaltfläche) Snapshots für alle Repos erzeugt und der zweite Start die Daten offline sofort anzeigt. → erfüllt: Test `restoresFromStore`, in der App „Cache geladen: 70 Repos“ vor dem ersten Netzzugriff.
 
 ---
 

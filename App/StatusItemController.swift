@@ -81,16 +81,15 @@ final class StatusItemController: NSObject {
             button.toolTip = String(localized: "RepoWatch – nicht angemeldet")
             return
         }
-        switch model.state {
-        case .failed(let message):
+        if let message = model.lastError {
             button.title = ""
             button.appearsDisabled = true
             button.toolTip = message
-        case .idle, .loading, .loaded:
+        } else {
             let count = model.visibleRepositories.count
-            button.title = model.inventory == nil ? "" : " \(count)"
+            button.title = model.syncState == nil ? "" : " \(count)"
             button.appearsDisabled = false
-            button.toolTip = model.inventory == nil
+            button.toolTip = model.syncState == nil
                 ? "RepoWatch"
                 : String(localized: "RepoWatch – \(count) Repositories")
         }

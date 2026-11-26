@@ -35,9 +35,10 @@ public struct PanelRootView: View {
         HStack(spacing: 8) {
             accountMenu
             Spacer()
-            if model.state == .loading {
+            if model.isSyncing {
                 ProgressView()
                     .controlSize(.small)
+                    .help("Wird aktualisiert …")
             }
             Button {
                 model.refresh()
@@ -47,7 +48,7 @@ public struct PanelRootView: View {
             .buttonStyle(.borderless)
             .keyboardShortcut("r")
             .help("Aktualisieren (⌘R)")
-            .disabled(model.state == .loading)
+            .disabled(model.isSyncing)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
@@ -87,7 +88,7 @@ public struct PanelRootView: View {
 
     @ViewBuilder
     private var content: some View {
-        if model.inventory != nil {
+        if model.syncState != nil {
             VStack(spacing: 0) {
                 summary
                 Divider()
@@ -97,20 +98,17 @@ public struct PanelRootView: View {
                 .listStyle(.plain)
                 .scrollContentBackground(.hidden)
             }
+        } else if let message = model.lastError {
+            ContentUnavailableView {
+                Label("Laden fehlgeschlagen", systemImage: "exclamationmark.triangle")
+            } description: {
+                Text(message)
+            } actions: {
+                Button("Erneut versuchen") { model.refresh() }
+            }
         } else {
-            switch model.state {
-            case .failed(let message):
-                ContentUnavailableView {
-                    Label("Laden fehlgeschlagen", systemImage: "exclamationmark.triangle")
-                } description: {
-                    Text(message)
-                } actions: {
-                    Button("Erneut versuchen") { model.refresh() }
-                }
-            case .idle, .loading, .loaded:
-                ContentUnavailableView {
-                    Label("Lade Repositories …", systemImage: "tray.and.arrow.down")
-                }
+            ContentUnavailableView {
+                Label("Lade Repositories …", systemImage: "tray.and.arrow.down")
             }
         }
     }
@@ -131,19 +129,20 @@ public struct PanelRootView: View {
 
     private var footer: some View {
         HStack(spacing: 6) {
-            if case .failed(let message) = model.state, model.inventory != nil {
+            if let message = model.lastError, model.syncState != nil {
+                // Fehler bei vorhandenen Daten: alter Stand bleibt sichtbar, Hinweis unten.
                 Image(systemName: "exclamationmark.triangle.fill")
                     .foregroundStyle(.orange)
-                    .help(message)
+                    .help(retryHelp(message))
             }
-            if let inventory = model.inventory {
-                Text("Aktualisiert")
-                RelativeTimeText(inventory.fetchedAt)
-                if let rateLimit = inventory.rateLimit {
+            if let state = model.syncState, let lastSync = state.lastSyncAt {
+                Text(model.lastError == nil ? "Aktualisiert" : "Stand von")
+                RelativeTimeText(lastSync)
+                if let rateLimit = state.rateLimit {
                     Text("·")
                     Text("API \(rateLimit.remaining.formatted()) / \(rateLimit.limit.formatted())")
                         .monospacedDigit()
-                        .help("Kosten dieses Durchlaufs: \(inventory.totalCost) Punkt(e) in \(inventory.pageCount) Seite(n)")
+                        .help("Verbleibendes GraphQL-Kontingent bis \(rateLimit.resetAt.formatted(date: .omitted, time: .shortened))")
                 }
             }
             Spacer()
@@ -155,6 +154,11 @@ public struct PanelRootView: View {
         .foregroundStyle(.secondary)
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
+    }
+
+    private func retryHelp(_ message: String) -> String {
+        guard let retryAt = model.nextRetryAt else { return message }
+        return "\(message)\nNächster Versuch \(retryAt.formatted(date: .omitted, time: .shortened))"
     }
 }
 

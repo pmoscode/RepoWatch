@@ -24,8 +24,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             guard let panelController, let anchor = statusItemController?.anchorFrame else { return }
             panelController.toggle(below: anchor)
         }
-        panelController.onVisibilityChange = { [weak statusItemController] isVisible in
+        panelController.onVisibilityChange = { [weak statusItemController, weak model] isVisible in
             statusItemController?.setHighlighted(isVisible)
+            if isVisible { model?.panelDidOpen() } else { model?.panelDidClose() }
         }
 
         self.model = model
