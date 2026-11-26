@@ -80,7 +80,7 @@ struct RefreshPlannerTests {
     }
 }
 
-@Suite("Refresh-Scheduler")
+@Suite("Refresh-Scheduler", .timeLimit(.minutes(1)))
 struct RefreshSchedulerTests {
     private func makeScheduler(_ github: FakeGitHub) throws -> (RefreshScheduler, SyncEngine) {
         let transport = HTTPTransport(tokenProvider: StaticTokenProvider("t"), session: github.session, retryPolicy: .none)
@@ -117,6 +117,26 @@ struct RefreshSchedulerTests {
         #expect(second.state.repositories[0].payload(CountPayload.self, for: CountModule.id)?.openIssues == 2)
         #expect(github.state.value.inventoryRequests == 2)
 
+        await scheduler.stop()
+    }
+
+    @Test("Auslöser während eines laufenden Syncs wird danach ausgeführt")
+    func triggerDuringSyncIsKept() async throws {
+        let github = FakeGitHub(repos: [FakeGitHub.Repo(id: "R1", name: "o/eins")])
+        let (scheduler, _) = try makeScheduler(github)
+        var events = scheduler.events.makeAsyncIterator()
+
+        await scheduler.start()
+        // Erst auslösen, wenn der Start-Sync läuft. (Kommt der Auslöser vorher, wird er zu Recht
+        // mit dem Start-Auslöser zusammengefasst.)
+        guard case .started = await nextEvent(&events) else { Issue.record("kein Start"); return }
+        await scheduler.trigger(.manual)
+        var finished = 0
+        while finished < 2, let event = await nextEvent(&events) {
+            if case .finished = event { finished += 1 }
+        }
+        #expect(finished == 2)
+        #expect(github.state.value.inventoryRequests == 2)
         await scheduler.stop()
     }
 

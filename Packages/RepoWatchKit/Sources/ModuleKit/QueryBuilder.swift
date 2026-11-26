@@ -36,14 +36,17 @@ public enum QueryBuilder {
         return result
     }
 
+    /// Rückt einen Block ein und behält dabei die relative Einrückung seiner Zeilen.
     private static func indent(_ text: String, by spaces: Int) -> String {
         let padding = String(repeating: " ", count: spaces)
-        return text
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .split(separator: "\n", omittingEmptySubsequences: false)
+        let lines = text.trimmingCharacters(in: .newlines).split(separator: "\n", omittingEmptySubsequences: false)
+        let common = lines
+            .filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+            .map { $0.prefix(while: { $0 == " " }).count }
+            .min() ?? 0
+        return lines
             .map { line in
-                let trimmed = line.drop(while: { $0 == " " })
-                return trimmed.isEmpty ? "" : padding + trimmed
+                line.trimmingCharacters(in: .whitespaces).isEmpty ? "" : padding + line.dropFirst(common)
             }
             .joined(separator: "\n")
     }

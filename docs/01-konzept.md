@@ -201,6 +201,10 @@ Gemessen mit dem `gh`-Token (Scopes `repo`, `read:org`, also wie die geplante OA
 | Leere Repos | 1 Repo ohne Standard-Branch (`defaultBranchRef: null`) | Module müssen `null` vertragen |
 | Repos ohne `pushedAt` | keins (das Schema erlaubt es aber, ein Test deckt den Fall ab) | – |
 
+**Nachmessung mit den vier echten Modulen (Phase 3):** 7 Pakete à 10 Repos, 2,5–6,0 s pro Paket,
+42–43 Punkte pro Detail-Durchlauf, keine GraphQL-Fehler. Ein kompletter Durchlauf inkl. Bestand und
+18 REST-Abfragen für `actions/runs` dauert ca. 24 s und kostet ca. 44 Punkte.
+
 Noch offen, weil dafür Beobachtung über Zeit nötig ist: ob `pushedAt`/`updatedAt` als Signal
 für „aktiv/ruhend“ taugen. Das klärt Phase 2 mit dem `ChangeDetector`.
 
@@ -226,6 +230,8 @@ für „aktiv/ruhend“ taugen. Das klärt Phase 2 mit dem `ChangeDetector`.
 
 Die Einteilung läuft über eine **geordnete Regelkette**. Die erste passende Regel gewinnt. Die
 Regeln sind konfigurierbar und als Protokoll umgesetzt, damit neue Regeln leicht dazukommen.
+Die Kette liegt in `Domain`, weil auch das Actions-Modul sie braucht: Runs aus PRs werden über
+Actor und Branch eingeteilt (E7).
 
 | # | Regel | Ergebnis |
 |---|---|---|
@@ -283,7 +289,7 @@ Ereignis-Feed (REST `events`). Achtung: Die Events-API von GitHub hat eine Verz�
 |---|---|---|---|
 | **GraphQL** (Teil der Detail-Abfrage) | Gesamtstatus des letzten Commits auf dem Standard-Branch (`statusCheckRollup`) + die zugehörigen Workflow-Runs (`checkSuites` mit `app.slug == "github-actions"`) · ob das Repo überhaupt Workflows hat (`.github/workflows`) | ✓/✗ in der Repo-Zeile, roter Punkt in der Menüleiste | nahezu kostenlos, für **alle** Repos |
 | **GraphQL** (PR-Fragment) | `statusCheckRollup` des letzten Commits jedes offenen PRs | ✓/✗ an der PR-Zeile, roter Punkt bei Menschen-PRs (E7) | nahezu kostenlos, für **alle** Repos |
-| **REST** `actions/runs` mit ETag | die letzten 30 Runs über alle Branches mit `name`, `status`, `conclusion`, `head_branch`, `event`, `actor`, `run_attempt`, `run_started_at`, `updated_at`, `html_url`, `pull_requests` | Actions-Reiter, Detailansicht, „rot seit …“ | 1 Anfrage pro Repo; `304` zählt nicht. Nur für **aktive** Repos **mit** Workflows |
+| **REST** `actions/runs` mit ETag (nur Repos mit Workflows und Push in den letzten 7 Tagen, rotem/ausstehendem Standard-Branch oder laufendem Run; sonst bleiben die letzten Runs erhalten) | die letzten 30 Runs über alle Branches mit `name`, `status`, `conclusion`, `head_branch`, `event`, `actor`, `run_attempt`, `run_started_at`, `updated_at`, `html_url`, `pull_requests` | Actions-Reiter, Detailansicht, „rot seit …“ | 1 Anfrage pro Repo; `304` zählt nicht. Nur für **aktive** Repos **mit** Workflows |
 
 Repos ohne Workflow-Ordner werden für REST gar nicht erst abgefragt und als „kein CI“ angezeigt.
 Hat ein Repo Workflows, aber am letzten Commit des Standard-Branches keine Läufe (im Spike

@@ -18,7 +18,7 @@ public struct AppConfiguration: Sendable {
     public var environmentToken: StoredToken?
     public var snapshotStore: (any SnapshotStore)?
     public var seenStateStore: any SeenStateStore
-    /// Registrierte Module (Konzept 9.2). Phase 3 füllt die Liste.
+    /// Registrierte Module (Konzept 9.2), Standard: `ModuleRegistry.standard()`.
     public var modules: ModuleRegistry
     public var sync: SyncConfiguration
 
@@ -49,13 +49,22 @@ public struct AppConfiguration: Sendable {
         let isConfigured = clientID.map { !$0.isEmpty && !$0.hasPrefix("$(") } ?? false
         let snapshotURL = try? JSONFileSnapshotStore.defaultLocation()
         let seenURL = try? JSONFileSnapshotStore.defaultLocation(fileName: "seen.json")
+        let modules: ModuleRegistry
+        do {
+            modules = try .standard()
+        } catch {
+            // Kann nur bei einem fehlerhaften Fragment passieren; Tests verhindern das.
+            assertionFailure("Module nicht registrierbar: \(error)")
+            modules = ModuleRegistry()
+        }
         return AppConfiguration(
             oauthClientID: isConfigured ? clientID : nil,
             tokenStore: KeychainTokenStore(),
             environmentToken: allowEnvironmentToken ? EnvironmentToken.read() : nil,
             snapshotStore: snapshotURL.map(JSONFileSnapshotStore.init(fileURL:)),
             seenStateStore: seenURL.map { JSONFileSeenStateStore(fileURL: $0) as any SeenStateStore }
-                ?? InMemorySeenStateStore()
+                ?? InMemorySeenStateStore(),
+            modules: modules
         )
     }
 }

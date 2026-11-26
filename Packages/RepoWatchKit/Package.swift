@@ -25,10 +25,10 @@ let package = Package(
         .target(name: "DesignSystem", dependencies: ["Domain"]),
 
         // Module (Konzept, Abschnitt 9.2)
-        .target(name: "IssuesModule", dependencies: ["Domain", "ModuleKit", "DesignSystem"]),
-        .target(name: "PullRequestsModule", dependencies: ["Domain", "ModuleKit", "DesignSystem"]),
-        .target(name: "ActivityModule", dependencies: ["Domain", "ModuleKit", "DesignSystem"]),
-        .target(name: "ActionsModule", dependencies: ["Domain", "ModuleKit", "DesignSystem"]),
+        .target(name: "IssuesModule", dependencies: ["Domain", "ModuleKit", "GitHubAPI", "DesignSystem"]),
+        .target(name: "PullRequestsModule", dependencies: ["Domain", "ModuleKit", "GitHubAPI", "DesignSystem"]),
+        .target(name: "ActivityModule", dependencies: ["Domain", "ModuleKit", "GitHubAPI", "DesignSystem"]),
+        .target(name: "ActionsModule", dependencies: ["Domain", "ModuleKit", "GitHubAPI", "DesignSystem"]),
 
         .target(
             name: "Features",
@@ -52,6 +52,14 @@ let package = Package(
         .testTarget(
             name: "ModuleKitTests",
             dependencies: ["ModuleKit", "Domain", "TestSupport"]
+        ),
+        .testTarget(
+            name: "ModulesTests",
+            dependencies: [
+                "IssuesModule", "PullRequestsModule", "ActivityModule", "ActionsModule",
+                "ModuleKit", "Domain", "GitHubAPI", "TestSupport",
+            ],
+            resources: [.copy("Fixtures")]
         ),
         .testTarget(
             name: "PersistenceTests",

@@ -25,6 +25,8 @@ public actor RefreshScheduler {
     private var loopTask: Task<Void, Never>?
     private var sleepTask: Task<Void, Error>?
     private var pendingTriggers: [RefreshTrigger] = []
+    /// Auslöser, der während eines Backoffs/Rate-Limits kam; wird danach ausgeführt statt verworfen.
+    private var deferredTrigger: RefreshTrigger?
     private var consecutiveFailures = 0
     private var notBefore: Date?
     private var rateLimitedUntil: Date?
@@ -67,6 +69,7 @@ public actor RefreshScheduler {
         sleepTask?.cancel()
         loopTask = nil
         pendingTriggers.removeAll()
+        deferredTrigger = nil
     }
 
     /// Weckt den Scheduler auf, z. B. beim Öffnen des Panels oder nach dem Ruhezustand.
@@ -88,31 +91,37 @@ public actor RefreshScheduler {
 
     private func run() async {
         while !Task.isCancelled {
+            // Auslöser übernehmen, BEVOR irgendwo gewartet wird: Was während eines `await` eintrifft,
+            // bleibt in `pendingTriggers` und weckt die nächste Runde (Actor-Reentrancy).
+            let consumed = pendingTriggers + (deferredTrigger.map { [$0] } ?? [])
+            pendingTriggers.removeAll()
+            deferredTrigger = nil
+            let trigger = Self.strongest(of: consumed) ?? .timer
+
             let current = now()
-            let trigger = strongestPendingTrigger() ?? .timer
-            let blockedUntil = [notBefore, rateLimitedUntil].compactMap { $0 }.filter { $0 > current }.max()
+            if let blockedUntil = [notBefore, rateLimitedUntil].compactMap({ $0 }).filter({ $0 > current }).max() {
+                if trigger != .timer {
+                    deferredTrigger = trigger
+                    logger.info("Auslöser \(String(describing: trigger), privacy: .public) wartet bis \(blockedUntil.formatted(date: .omitted, time: .standard), privacy: .public) (Backoff/Rate-Limit)")
+                }
+                await idle(for: .seconds(min(max(blockedUntil.timeIntervalSince(current), 1), Self.maximumIdle)))
+                continue
+            }
 
             let state = await engine.currentState
-            let plan = blockedUntil == nil ? planner.plan(for: state, trigger: trigger, now: current) : .nothing
-
+            let plan = planner.plan(for: state, trigger: trigger, now: current)
             if !plan.isEmpty {
                 if trigger != .timer {
                     logger.info("Plan für \(String(describing: trigger), privacy: .public): Bestand=\(plan.inventory), \(plan.allRepositories ? "alle" : String(plan.repositoryIDs.count), privacy: .public) Repos")
                 }
-                pendingTriggers.removeAll()
                 await execute(plan)
                 continue
             }
-            if let blockedUntil, trigger != .timer {
-                logger.info("Auslöser \(String(describing: trigger), privacy: .public) wartet bis \(blockedUntil.formatted(date: .omitted, time: .standard), privacy: .public) (Backoff/Rate-Limit)")
-            } else if trigger != .timer {
+            if trigger != .timer {
                 logger.info("Auslöser \(String(describing: trigger), privacy: .public): nichts fällig")
             }
-            if blockedUntil == nil { pendingTriggers.removeAll() }
-
-            let wakeAt = blockedUntil ?? planner.nextDueDate(for: state, now: current)
-            let seconds = min(max(wakeAt.timeIntervalSince(current), 1), Self.maximumIdle)
-            await idle(for: .seconds(seconds))
+            let wakeAt = planner.nextDueDate(for: state, now: current)
+            await idle(for: .seconds(min(max(wakeAt.timeIntervalSince(current), 1), Self.maximumIdle)))
         }
     }
 
@@ -152,9 +161,9 @@ public actor RefreshScheduler {
         sleepTask = nil
     }
 
-    /// Mehrere Auslöser während eines Durchlaufs werden zum umfassendsten zusammengefasst.
-    private func strongestPendingTrigger() -> RefreshTrigger? {
+    /// Mehrere Auslöser werden zum umfassendsten zusammengefasst.
+    static func strongest(of triggers: [RefreshTrigger]) -> RefreshTrigger? {
         let order: [RefreshTrigger] = [.launch, .manual, .wake, .panelOpened, .timer]
-        return order.first(where: pendingTriggers.contains)
+        return order.first(where: triggers.contains)
     }
 }

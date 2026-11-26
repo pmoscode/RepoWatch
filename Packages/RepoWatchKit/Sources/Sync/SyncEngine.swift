@@ -168,13 +168,15 @@ public actor SyncEngine {
                 apply(node: node, modules: modules, context: context, to: &next.repositories[index])
                 for module in modules {
                     guard let payload = next.repositories[index].payloads[module.id] else { continue }
+                    // Auch ohne Folgeanfragen: `merge` darf Daten aus dem letzten Durchlauf übernehmen.
                     let requests = module.supplementaryRequests(for: next.repositories[index].meta, payload: payload.value)
-                    if !requests.isEmpty { supplementaryWork.append((index, module, requests)) }
+                    supplementaryWork.append((index, module, requests))
                 }
             }
 
             let responses = await performSupplementary(supplementaryWork.flatMap(\.requests))
             stats.supplementaryRequests = responses.count
+            let previousByID = Dictionary(uniqueKeysWithValues: previous.repositories.map { ($0.id, $0) })
             stats.supplementaryNotModified = responses.values.filter(\.isFromCache).count
             for work in supplementaryWork {
                 let index = work.index
@@ -184,7 +186,7 @@ public actor SyncEngine {
                     let merged = try work.module.merge(
                         payload.value,
                         with: work.requests.compactMap { responses[$0] },
-                        previous: previous.repositories.first { $0.id == id }?.payloads[work.module.id]?.value
+                        previous: previousByID[id]?.payloads[work.module.id]?.value
                     )
                     next.repositories[index].payloads[work.module.id] = AnyPayload(merged)
                     next.repositories[index].summaries[work.module.id] = work.module.summarize(merged, context: context)

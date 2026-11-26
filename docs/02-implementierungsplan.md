@@ -128,31 +128,36 @@ Das Herzstück. Hier entscheidet sich, ob die App später leicht erweiterbar ble
 
 ## Phase 3 – Die vier Module · M/L
 
-- [ ] **IssuesModule**
-  - [ ] Fragment: `issues(states: OPEN, first: 20, orderBy: UPDATED_AT)` mit Titel, URL, Labels, Autor, Zeitstempeln
-  - [ ] Payload: `totalCount`, `items: [IssueSummary]`, `hasMore`
-  - [ ] Nachladen weiterer Seiten in der Detailansicht (eigene Abfrage pro Repo)
-- [ ] **PullRequestsModule**
-  - [ ] Fragment: offene PRs mit `isDraft`, `headRefName`, `author { __typename login }`, `statusCheckRollup` des letzten Commits
-  - [ ] `AuthorClassifier` mit Regelkette (Konzept, Abschnitt 6), Regeln aus den Einstellungen
-  - [ ] Zusammenfassung: Anzahl pro `PRAuthorKind`
-  - [ ] Tests: Tabelle mit Fällen (renovate[bot], selbst betriebenes Renovate als `User`, dependabot, github-actions, ich, Mensch)
-- [ ] **ActivityModule**
-  - [ ] Fragment: `history(since: 7d/30d) { totalCount }`, dazu zuletzt geänderte Issues/PRs (inkl. geschlossener) mit `createdAt`/`closedAt`/`mergedAt` für die Zählung über 7 Tage
-  - [ ] Wert und Stufe berechnen (Gewichte konfigurierbar, Schwellen über Quantile)
-  - [ ] Detail: Sparkline aus `stats/participation`, Ereignis-Feed aus `events` (REST mit ETag, nur auf Anforderung)
-  - [ ] Tests: Wertberechnung, Quantil-Stufen, Zuordnung der Ereignistypen
-- [ ] **ActionsModule** (Konzept, Abschnitt 8)
-  - [ ] Fragment: `statusCheckRollup` + `checkSuites { workflowRun }` des Standard-Branches, `object(expression: "HEAD:.github/workflows")`
-  - [ ] REST-Folgeanfrage `actions/runs?per_page=30` nur für aktive Repos mit Workflows
-  - [ ] `RunOutcome`-Zuordnung aller `status`/`conclusion`-Werte, `WorkflowRunSummary`
-  - [ ] Ableitungen: aktueller Zustand pro Workflow+Branch (letzter Versuch zählt), „rot seit“ + Fehlschläge in Folge, Erfolgsquote, Dauer
-  - [ ] Signal „Run läuft“ an den Scheduler (Kurztakt)
-  - [ ] `ChangeDetector`-Erweiterung: `workflowFailed`, `workflowRecovered`
-  - [ ] Verknüpfung Run → PR → `PRAuthorKind`, um Bot-Runs ausblenden zu können
-  - [ ] Tests: Zuordnungstabelle, Streak-Berechnung (inkl. Re-Runs und abgebrochener Runs), Repo ohne Workflows, Actions deaktiviert (404)
+- [x] **Autor-Einteilung** (Konzept 6) als Regelkette in `Domain` (`AuthorClassifier`, `AuthorRules`), weil PR- **und** Actions-Modul sie brauchen; GraphQL- und REST-Schreibweise der Bot-Logins
+- [x] **IssuesModule**
+  - [x] Fragment: `issues(states: OPEN, first: 20, orderBy: UPDATED_AT)` mit Titel, URL, Labels, Autor, Kommentaranzahl, Zeitstempeln, Cursor
+  - [x] Payload: `totalCount`, `items`, `hasMore`, `endCursor`
+  - [x] `IssuesModule.fetchPage(…)` zum Nachladen in der Detailansicht (wird in Phase 4 angebunden)
+  - [x] Änderungen über `ItemDiff`: neu (Nummer größer als alle bisherigen), geändert, geschlossen (nur wenn nicht bloß aus dem Fenster verdrängt)
+- [x] **PullRequestsModule**
+  - [x] Fragment: offene PRs (30) mit `isDraft`, `headRefName`, `author { __typename login }`, `statusCheckRollup` des letzten Commits
+  - [x] Zusammenfassung: Anzahl je Autor-Art, rote Checks gesamt und bei Menschen; **Alarm nur bei Menschen-PRs** (E7)
+  - [x] Tests: Tabelle mit allen Fällen der Regelkette (inkl. selbst betriebenes Renovate, `[bot]`-Suffix, ich, Mensch)
+- [x] **ActivityModule**
+  - [x] Fragment: `history(since: 7d/30d)`, `pushedAt`, Issues seit 7 Tagen, letzte 30 PRs → Zählung über 7 Tage
+  - [x] Wert nach Konzept 7 (Gewichte in `ActivityWeights`), Stufen über Drittel der aktiven Repos (`ActivityRanking`)
+  - [x] `fetchWeeklyCommits` (`stats/participation`, 202 → `.pending`) und `fetchEvents` (Events-API, ETag) für die Detailansicht
+- [x] **ActionsModule** (Konzept 8)
+  - [x] Fragment: `statusCheckRollup` + `checkSuites { workflowRun }` des Standard-Branches (nur `github-actions`), `.github/workflows`
+  - [x] REST `actions/runs?per_page=30` nur für Repos mit Workflows **und** (Push in den letzten 7 Tagen **oder** Standard-Branch rot/ausstehend **oder** laufender Run); sonst bleiben die letzten Runs erhalten
+  - [x] `RunOutcome` für alle `status`/`conclusion`-Werte (REST und GraphQL), `WorkflowRunSummary`
+  - [x] `WorkflowAnalysis`: Zustand je Workflow+Branch, „rot seit“, Fehlschläge in Folge (Abbrüche zählen nicht), Erfolgsquote, Dauer
+  - [x] Laufender Run → `wantsFrequentRefresh` → Kurztakt
+  - [x] Änderungen `workflowFailed` / `workflowRecovered`
+  - [x] Alarm (E7): Standard-Branch rot oder roter Workflow in einem PR-Lauf eines Menschen (Actor + Branch über die Regelkette)
+- [x] Module in der App registriert (`ModuleRegistry.standard()`); die Engine ruft `merge` jetzt für jedes Modul auf, damit Daten aus dem letzten Durchlauf übernommen werden können
+- [x] Tests: 8 anonymisierte **echte** Repo-Knoten (alle Module lesen alle Knoten), leeres Repo, Regelkette, `ItemDiff`, Wert/Stufen, Events, Nachladen, Status-Zuordnung, Serien, Alarm, REST-Merge, Änderungen (insgesamt 86 Tests)
+- [x] **Echter Lauf** (26.11.2026): 70 Repos in 7 Paketen à 10, langsamstes Paket 5,2 s, 43 Punkte, 18 REST-Abfragen, 0 Fehler, ganzer Durchlauf 24 s. Ergebnis deckt sich mit dem Spike (43 Issues, 107 PRs, davon 98 Renovate, 6 Dependabot, 3 von Menschen; 17 rote PR-Checks, alle in Bot-PRs; 39 Repos mit Workflows)
+- [ ] Offen aus Phase 0: Signal `pushedAt`/`updatedAt` auswerten – jetzt mit echten Änderungen im Log („Aktivitäts-Signal“), nach ein paar Tagen Laufzeit
 
-**Fertig, wenn:** Alle vier Module Daten liefern, Zusammenfassungen erzeugen und vollständig getestet sind (noch ohne fertige UI).
+Unterwegs gefunden und behoben: Im `RefreshScheduler` konnte ein Auslöser (z. B. ⌘R) verloren gehen, wenn er während einer Wartestelle ohne fälligen Plan kam; außerdem drehte die Schleife bei Backoff mit wartendem Auslöser leer. Auslöser werden jetzt vor jedem `await` übernommen und während eines Backoffs aufgehoben.
+
+**Fertig, wenn:** Alle vier Module Daten liefern, Zusammenfassungen erzeugen und vollständig getestet sind (noch ohne fertige UI). → erfüllt.
 
 ---
 
@@ -224,7 +229,7 @@ Das Herzstück. Hier entscheidet sich, ob die App später leicht erweiterbar ble
 | Risiko | Auswirkung | Gegenmaßnahme |
 |---|---|---|
 | Sehr viele Repos → Rate-Limit | veraltete Daten | gestufter Takt, Bündelung, ETag (Spike: ca. 35 Punkte pro Durchlauf, unkritisch) |
-| Schwere Detail-Abfragen → Zeitlimit (HTTP 502) | Daten fehlen ganz | **im Spike eingetreten** ab 25 Repos pro Anfrage → Pakete à 10, bei 502 halbieren |
+| Schwere Detail-Abfragen → Zeitlimit (HTTP 502) | Daten fehlen ganz | **im Spike eingetreten** ab 25 Repos pro Anfrage → Pakete à 10, bei 502 halbieren. Mit allen vier Modulen bis 6 s pro Paket (Limit ca. 10 s); bei mehr Modulen Paketgröße senken |
 | Organisationen blockieren OAuth-Apps | Repos fehlen ohne erkennbaren Grund | erkennen (fehlende Repos/Fehlermeldung), Hinweis + PAT als Alternative |
 | Events-API verzögert | Feed hinkt hinterher | Zählung über GraphQL, Feed nur ergänzend |
 | Eigenes `NSPanel` verhält sich anders als ein System-Popover | Fokus, Schließen, Spaces oder Vollbild fühlen sich falsch an | Verhalten früh in Phase 0 prüfen (eigene Aufgabe), `collectionBehavior` und `level` bewusst setzen |

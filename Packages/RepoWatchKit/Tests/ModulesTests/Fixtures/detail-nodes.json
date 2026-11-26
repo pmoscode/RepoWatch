@@ -1,0 +1,1981 @@
+{
+ "nodes": [
+  {
+   "id": "R_fixture_1",
+   "m_issues_open": {
+    "totalCount": 2,
+    "pageInfo": {
+     "hasNextPage": false,
+     "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0xMS0yMlQwOToyMjowMVrPAAAAAYXbfKg="
+    },
+    "nodes": [
+     {
+      "number": 8,
+      "title": "Titel 1",
+      "url": "https://github.com/owner-1/repo-1/issues/8",
+      "createdAt": "2026-02-28T10:31:33Z",
+      "updatedAt": "2026-11-26T06:45:17Z",
+      "author": {
+       "login": "renovate"
+      },
+      "comments": {
+       "totalCount": 0
+      },
+      "labels": {
+       "nodes": []
+      }
+     },
+     {
+      "number": 141,
+      "title": "Titel 2",
+      "url": "https://github.com/owner-1/repo-1/issues/141",
+      "createdAt": "2026-11-22T09:21:02Z",
+      "updatedAt": "2026-11-22T09:22:01Z",
+      "author": {
+       "login": "user-1"
+      },
+      "comments": {
+       "totalCount": 0
+      },
+      "labels": {
+       "nodes": [
+        {
+         "name": "label-1",
+         "color": "a2eeef"
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "m_prs_open": {
+    "totalCount": 2,
+    "pageInfo": {
+     "hasNextPage": false
+    },
+    "nodes": [
+     {
+      "number": 142,
+      "title": "Titel 3",
+      "url": "https://github.com/owner-1/repo-1/pull/142",
+      "isDraft": false,
+      "createdAt": "2026-11-26T06:45:14Z",
+      "updatedAt": "2026-11-26T06:48:25Z",
+      "headRefName": "renovate/branch-1",
+      "author": {
+       "__typename": "Bot",
+       "login": "renovate"
+      },
+      "commits": {
+       "nodes": [
+        {
+         "commit": {
+          "statusCheckRollup": {
+           "state": "SUCCESS"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "number": 140,
+      "title": "Titel 4",
+      "url": "https://github.com/owner-1/repo-1/pull/140",
+      "isDraft": false,
+      "createdAt": "2026-11-19T05:24:58Z",
+      "updatedAt": "2026-11-21T05:26:13Z",
+      "headRefName": "renovate/branch-2",
+      "author": {
+       "__typename": "Bot",
+       "login": "renovate"
+      },
+      "commits": {
+       "nodes": [
+        {
+         "commit": {
+          "statusCheckRollup": null
+         }
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "m_activity_pushedAt": "2026-11-26T06:45:19Z",
+   "m_activity_branch": {
+    "target": {
+     "commits7d": {
+      "totalCount": 0
+     },
+     "commits30d": {
+      "totalCount": 19
+     }
+    }
+   },
+   "m_activity_issues": {
+    "nodes": [
+     {
+      "createdAt": "2026-02-28T10:31:33Z",
+      "closedAt": null
+     },
+     {
+      "createdAt": "2026-11-22T09:21:02Z",
+      "closedAt": null
+     }
+    ]
+   },
+   "m_activity_prs": {
+    "nodes": [
+     {
+      "createdAt": "2026-11-26T06:45:14Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-11-19T05:24:58Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-11-06T02:44:25Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-11-10T15:15:38Z",
+      "mergedAt": "2026-11-13T03:24:42Z"
+     },
+     {
+      "createdAt": "2026-11-10T03:42:13Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-11-10T03:42:06Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-11-11T19:01:20Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-11-08T18:23:23Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-11-05T20:12:31Z",
+      "mergedAt": "2026-11-06T02:43:38Z"
+     },
+     {
+      "createdAt": "2026-11-02T21:53:33Z",
+      "mergedAt": "2026-11-03T09:19:37Z"
+     },
+     {
+      "createdAt": "2026-11-02T21:53:18Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-10-30T18:24:28Z",
+      "mergedAt": "2026-10-30T18:31:54Z"
+     },
+     {
+      "createdAt": "2026-10-28T03:41:16Z",
+      "mergedAt": "2026-10-30T18:15:15Z"
+     },
+     {
+      "createdAt": "2026-10-22T14:42:53Z",
+      "mergedAt": "2026-10-23T13:53:40Z"
+     },
+     {
+      "createdAt": "2026-10-07T23:59:22Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-10-11T22:08:44Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-10-09T19:05:41Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-10-09T19:05:33Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-09-15T15:53:25Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-09-15T15:53:30Z",
+      "mergedAt": "2026-09-15T15:59:50Z"
+     },
+     {
+      "createdAt": "2026-09-08T18:56:27Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-09-08T14:51:57Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-09-03T02:08:53Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-09-05T00:27:42Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-09-05T05:35:10Z",
+      "mergedAt": "2026-09-05T09:03:23Z"
+     },
+     {
+      "createdAt": "2026-09-02T13:57:41Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-09-02T03:31:48Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-08-29T08:23:20Z",
+      "mergedAt": "2026-09-01T20:20:34Z"
+     },
+     {
+      "createdAt": "2026-08-25T18:00:40Z",
+      "mergedAt": "2026-08-25T18:08:34Z"
+     },
+     {
+      "createdAt": "2026-08-17T10:47:11Z",
+      "mergedAt": null
+     }
+    ]
+   },
+   "m_actions_head": {
+    "name": "main",
+    "target": {
+     "statusCheckRollup": {
+      "state": "SUCCESS"
+     },
+     "checkSuites": {
+      "nodes": [
+       {
+        "status": "QUEUED",
+        "conclusion": null,
+        "app": {
+         "slug": "renovate"
+        },
+        "workflowRun": null
+       },
+       {
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "app": {
+         "slug": "github-actions"
+        },
+        "workflowRun": {
+         "databaseId": 43716778336,
+         "runNumber": 280,
+         "url": "https://github.com/owner-1/repo-1/actions/runs/43716778336",
+         "createdAt": "2026-11-15T13:01:06Z",
+         "updatedAt": "2026-11-15T13:05:26Z",
+         "event": "push",
+         "workflow": {
+          "name": "Workflow 1"
+         }
+        }
+       },
+       {
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "app": {
+         "slug": "github-actions"
+        },
+        "workflowRun": {
+         "databaseId": 43716778359,
+         "runNumber": 209,
+         "url": "https://github.com/owner-1/repo-1/actions/runs/43716778359",
+         "createdAt": "2026-11-15T13:01:06Z",
+         "updatedAt": "2026-11-15T13:04:07Z",
+         "event": "push",
+         "workflow": {
+          "name": "Workflow 2"
+         }
+        }
+       },
+       {
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "app": {
+         "slug": "github-actions"
+        },
+        "workflowRun": {
+         "databaseId": 43716778406,
+         "runNumber": 246,
+         "url": "https://github.com/owner-1/repo-1/actions/runs/43716778406",
+         "createdAt": "2026-11-15T13:01:06Z",
+         "updatedAt": "2026-11-15T13:07:09Z",
+         "event": "push",
+         "workflow": {
+          "name": "Workflow 3"
+         }
+        }
+       },
+       {
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "app": {
+         "slug": "github-actions"
+        },
+        "workflowRun": {
+         "databaseId": 43814409435,
+         "runNumber": 281,
+         "url": "https://github.com/owner-1/repo-1/actions/runs/43814409435",
+         "createdAt": "2026-11-16T06:05:23Z",
+         "updatedAt": "2026-11-16T06:09:46Z",
+         "event": "schedule",
+         "workflow": {
+          "name": "Workflow 1"
+         }
+        }
+       },
+       {
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "app": {
+         "slug": "github-actions"
+        },
+        "workflowRun": {
+         "databaseId": 45121793868,
+         "runNumber": 282,
+         "url": "https://github.com/owner-1/repo-1/actions/runs/45121793868",
+         "createdAt": "2026-11-23T06:05:15Z",
+         "updatedAt": "2026-11-23T06:10:12Z",
+         "event": "schedule",
+         "workflow": {
+          "name": "Workflow 1"
+         }
+        }
+       }
+      ]
+     }
+    }
+   },
+   "m_actions_workflows": {
+    "entries": [
+     {
+      "name": "workflow-1.yml"
+     },
+     {
+      "name": "workflow-2.yml"
+     },
+     {
+      "name": "workflow-3.yml"
+     },
+     {
+      "name": "workflow-4.yml"
+     },
+     {
+      "name": "workflow-5.yml"
+     }
+    ]
+   }
+  },
+  {
+   "id": "R_fixture_2",
+   "m_issues_open": {
+    "totalCount": 1,
+    "pageInfo": {
+     "hasNextPage": false,
+     "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0xMS0yNVQyMDoxMTozNFrO9PUN7A=="
+    },
+    "nodes": [
+     {
+      "number": 3,
+      "title": "Titel 5",
+      "url": "https://github.com/owner-1/repo-2/issues/3",
+      "createdAt": "2026-03-20T19:19:42Z",
+      "updatedAt": "2026-11-25T20:11:34Z",
+      "author": {
+       "login": "renovate"
+      },
+      "comments": {
+       "totalCount": 0
+      },
+      "labels": {
+       "nodes": []
+      }
+     }
+    ]
+   },
+   "m_prs_open": {
+    "totalCount": 2,
+    "pageInfo": {
+     "hasNextPage": false
+    },
+    "nodes": [
+     {
+      "number": 47,
+      "title": "Titel 6",
+      "url": "https://github.com/owner-1/repo-2/pull/47",
+      "isDraft": false,
+      "createdAt": "2026-11-25T20:11:31Z",
+      "updatedAt": "2026-11-25T20:11:31Z",
+      "headRefName": "renovate/branch-3",
+      "author": {
+       "__typename": "Bot",
+       "login": "renovate"
+      },
+      "commits": {
+       "nodes": [
+        {
+         "commit": {
+          "statusCheckRollup": null
+         }
+        }
+       ]
+      }
+     },
+     {
+      "number": 26,
+      "title": "Titel 7",
+      "url": "https://github.com/owner-1/repo-2/pull/26",
+      "isDraft": true,
+      "createdAt": "2026-08-27T20:19:26Z",
+      "updatedAt": "2026-08-27T20:19:26Z",
+      "headRefName": "feat/branch-4",
+      "author": {
+       "__typename": "User",
+       "login": "user-2"
+      },
+      "commits": {
+       "nodes": [
+        {
+         "commit": {
+          "statusCheckRollup": null
+         }
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "m_activity_pushedAt": "2026-11-25T20:11:35Z",
+   "m_activity_branch": {
+    "target": {
+     "commits7d": {
+      "totalCount": 2
+     },
+     "commits30d": {
+      "totalCount": 26
+     }
+    }
+   },
+   "m_activity_issues": {
+    "nodes": [
+     {
+      "createdAt": "2026-03-20T19:19:42Z",
+      "closedAt": null
+     }
+    ]
+   },
+   "m_activity_prs": {
+    "nodes": [
+     {
+      "createdAt": "2026-11-25T20:11:31Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-11-20T09:13:01Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-11-20T04:11:22Z",
+      "mergedAt": "2026-11-22T00:36:45Z"
+     },
+     {
+      "createdAt": "2026-11-20T04:11:29Z",
+      "mergedAt": "2026-11-22T00:36:24Z"
+     },
+     {
+      "createdAt": "2026-11-17T20:21:15Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-11-17T20:21:22Z",
+      "mergedAt": "2026-11-17T20:23:11Z"
+     },
+     {
+      "createdAt": "2026-11-15T12:22:34Z",
+      "mergedAt": "2026-11-17T20:20:13Z"
+     },
+     {
+      "createdAt": "2026-11-11T19:35:34Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-10-27T21:09:13Z",
+      "mergedAt": "2026-11-11T19:35:00Z"
+     },
+     {
+      "createdAt": "2026-11-04T21:04:09Z",
+      "mergedAt": "2026-11-11T19:27:48Z"
+     },
+     {
+      "createdAt": "2026-10-21T13:25:02Z",
+      "mergedAt": "2026-10-22T07:02:01Z"
+     },
+     {
+      "createdAt": "2026-10-15T05:05:42Z",
+      "mergedAt": "2026-10-17T10:45:53Z"
+     },
+     {
+      "createdAt": "2026-10-06T01:35:11Z",
+      "mergedAt": "2026-10-07T15:18:30Z"
+     },
+     {
+      "createdAt": "2026-10-05T21:39:09Z",
+      "mergedAt": "2026-10-07T15:19:04Z"
+     },
+     {
+      "createdAt": "2026-10-02T22:25:40Z",
+      "mergedAt": "2026-10-03T20:06:51Z"
+     },
+     {
+      "createdAt": "2026-10-03T20:02:58Z",
+      "mergedAt": "2026-10-03T20:06:05Z"
+     },
+     {
+      "createdAt": "2026-09-19T22:07:58Z",
+      "mergedAt": "2026-09-19T22:49:37Z"
+     },
+     {
+      "createdAt": "2026-09-15T23:45:16Z",
+      "mergedAt": "2026-09-18T18:24:41Z"
+     },
+     {
+      "createdAt": "2026-09-18T02:12:50Z",
+      "mergedAt": "2026-09-18T18:24:28Z"
+     },
+     {
+      "createdAt": "2026-09-09T22:30:14Z",
+      "mergedAt": "2026-09-10T06:37:43Z"
+     },
+     {
+      "createdAt": "2026-09-01T17:38:49Z",
+      "mergedAt": "2026-09-01T20:52:51Z"
+     },
+     {
+      "createdAt": "2026-08-27T20:19:26Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-08-25T19:43:31Z",
+      "mergedAt": "2026-08-26T06:44:35Z"
+     },
+     {
+      "createdAt": "2026-08-19T03:03:13Z",
+      "mergedAt": "2026-08-19T06:59:29Z"
+     },
+     {
+      "createdAt": "2026-08-03T22:16:18Z",
+      "mergedAt": "2026-08-08T20:54:56Z"
+     },
+     {
+      "createdAt": "2026-07-22T16:55:14Z",
+      "mergedAt": "2026-07-22T20:16:34Z"
+     },
+     {
+      "createdAt": "2026-07-14T23:40:11Z",
+      "mergedAt": "2026-07-21T16:01:32Z"
+     },
+     {
+      "createdAt": "2026-07-15T15:57:52Z",
+      "mergedAt": "2026-07-21T16:01:20Z"
+     },
+     {
+      "createdAt": "2026-07-08T05:51:23Z",
+      "mergedAt": "2026-07-08T08:11:17Z"
+     },
+     {
+      "createdAt": "2026-07-07T23:08:49Z",
+      "mergedAt": "2026-07-07T23:10:36Z"
+     }
+    ]
+   },
+   "m_actions_head": {
+    "name": "main",
+    "target": {
+     "statusCheckRollup": null,
+     "checkSuites": {
+      "nodes": [
+       {
+        "status": "QUEUED",
+        "conclusion": null,
+        "app": {
+         "slug": "renovate"
+        },
+        "workflowRun": null
+       }
+      ]
+     }
+    }
+   },
+   "m_actions_workflows": {
+    "entries": [
+     {
+      "name": "workflow-6.yml"
+     },
+     {
+      "name": "workflow-7.yml"
+     }
+    ]
+   }
+  },
+  {
+   "id": "R_fixture_3",
+   "m_issues_open": {
+    "totalCount": 1,
+    "pageInfo": {
+     "hasNextPage": false,
+     "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0xMS0yNlQwMTozODowNVrPAAAAAUVwnGs="
+    },
+    "nodes": [
+     {
+      "number": 4,
+      "title": "Titel 8",
+      "url": "https://github.com/owner-2/repo-3/issues/4",
+      "createdAt": "2026-09-15T09:12:25Z",
+      "updatedAt": "2026-11-26T01:38:05Z",
+      "author": {
+       "login": "renovate"
+      },
+      "comments": {
+       "totalCount": 0
+      },
+      "labels": {
+       "nodes": []
+      }
+     }
+    ]
+   },
+   "m_prs_open": {
+    "totalCount": 10,
+    "pageInfo": {
+     "hasNextPage": false
+    },
+    "nodes": [
+     {
+      "number": 24,
+      "title": "Titel 9",
+      "url": "https://github.com/owner-2/repo-3/pull/24",
+      "isDraft": false,
+      "createdAt": "2026-11-16T05:30:51Z",
+      "updatedAt": "2026-11-26T01:38:03Z",
+      "headRefName": "renovate/branch-1",
+      "author": {
+       "__typename": "Bot",
+       "login": "renovate"
+      },
+      "commits": {
+       "nodes": [
+        {
+         "commit": {
+          "statusCheckRollup": {
+           "state": "FAILURE"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "number": 23,
+      "title": "Titel 10",
+      "url": "https://github.com/owner-2/repo-3/pull/23",
+      "isDraft": false,
+      "createdAt": "2026-11-16T03:24:31Z",
+      "updatedAt": "2026-11-25T17:54:59Z",
+      "headRefName": "renovate/branch-5",
+      "author": {
+       "__typename": "Bot",
+       "login": "renovate"
+      },
+      "commits": {
+       "nodes": [
+        {
+         "commit": {
+          "statusCheckRollup": {
+           "state": "FAILURE"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "number": 22,
+      "title": "Titel 11",
+      "url": "https://github.com/owner-2/repo-3/pull/22",
+      "isDraft": false,
+      "createdAt": "2026-11-16T03:24:21Z",
+      "updatedAt": "2026-11-25T17:54:56Z",
+      "headRefName": "renovate/branch-6",
+      "author": {
+       "__typename": "Bot",
+       "login": "renovate"
+      },
+      "commits": {
+       "nodes": [
+        {
+         "commit": {
+          "statusCheckRollup": {
+           "state": "FAILURE"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "number": 20,
+      "title": "Titel 12",
+      "url": "https://github.com/owner-2/repo-3/pull/20",
+      "isDraft": false,
+      "createdAt": "2026-11-16T00:00:53Z",
+      "updatedAt": "2026-11-25T17:54:51Z",
+      "headRefName": "renovate/branch-7",
+      "author": {
+       "__typename": "Bot",
+       "login": "renovate"
+      },
+      "commits": {
+       "nodes": [
+        {
+         "commit": {
+          "statusCheckRollup": {
+           "state": "FAILURE"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "number": 11,
+      "title": "Titel 13",
+      "url": "https://github.com/owner-2/repo-3/pull/11",
+      "isDraft": false,
+      "createdAt": "2026-09-28T19:40:54Z",
+      "updatedAt": "2026-11-22T22:16:10Z",
+      "headRefName": "renovate/branch-8",
+      "author": {
+       "__typename": "Bot",
+       "login": "renovate"
+      },
+      "commits": {
+       "nodes": [
+        {
+         "commit": {
+          "statusCheckRollup": {
+           "state": "FAILURE"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "number": 19,
+      "title": "Titel 14",
+      "url": "https://github.com/owner-2/repo-3/pull/19",
+      "isDraft": false,
+      "createdAt": "2026-10-25T20:44:53Z",
+      "updatedAt": "2026-11-21T02:22:47Z",
+      "headRefName": "renovate/branch-9",
+      "author": {
+       "__typename": "Bot",
+       "login": "renovate"
+      },
+      "commits": {
+       "nodes": [
+        {
+         "commit": {
+          "statusCheckRollup": {
+           "state": "FAILURE"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "number": 26,
+      "title": "Titel 15",
+      "url": "https://github.com/owner-2/repo-3/pull/26",
+      "isDraft": false,
+      "createdAt": "2026-11-16T19:54:42Z",
+      "updatedAt": "2026-11-16T19:54:43Z",
+      "headRefName": "renovate/branch-10",
+      "author": {
+       "__typename": "Bot",
+       "login": "renovate"
+      },
+      "commits": {
+       "nodes": [
+        {
+         "commit": {
+          "statusCheckRollup": {
+           "state": "FAILURE"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "number": 25,
+      "title": "Titel 16",
+      "url": "https://github.com/owner-2/repo-3/pull/25",
+      "isDraft": false,
+      "createdAt": "2026-11-16T05:31:00Z",
+      "updatedAt": "2026-11-16T05:31:01Z",
+      "headRefName": "renovate/branch-11",
+      "author": {
+       "__typename": "Bot",
+       "login": "renovate"
+      },
+      "commits": {
+       "nodes": [
+        {
+         "commit": {
+          "statusCheckRollup": {
+           "state": "FAILURE"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "number": 18,
+      "title": "Titel 17",
+      "url": "https://github.com/owner-2/repo-3/pull/18",
+      "isDraft": false,
+      "createdAt": "2026-10-21T16:50:09Z",
+      "updatedAt": "2026-11-16T00:01:24Z",
+      "headRefName": "renovate/branch-12",
+      "author": {
+       "__typename": "Bot",
+       "login": "renovate"
+      },
+      "commits": {
+       "nodes": [
+        {
+         "commit": {
+          "statusCheckRollup": {
+           "state": "FAILURE"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "number": 21,
+      "title": "Titel 18",
+      "url": "https://github.com/owner-2/repo-3/pull/21",
+      "isDraft": false,
+      "createdAt": "2026-11-16T00:01:16Z",
+      "updatedAt": "2026-11-16T00:01:16Z",
+      "headRefName": "renovate/branch-13",
+      "author": {
+       "__typename": "Bot",
+       "login": "renovate"
+      },
+      "commits": {
+       "nodes": [
+        {
+         "commit": {
+          "statusCheckRollup": {
+           "state": "FAILURE"
+          }
+         }
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "m_activity_pushedAt": "2026-11-26T01:38:07Z",
+   "m_activity_branch": {
+    "target": {
+     "commits7d": {
+      "totalCount": 0
+     },
+     "commits30d": {
+      "totalCount": 0
+     }
+    }
+   },
+   "m_activity_issues": {
+    "nodes": [
+     {
+      "createdAt": "2026-09-15T09:12:25Z",
+      "closedAt": null
+     }
+    ]
+   },
+   "m_activity_prs": {
+    "nodes": [
+     {
+      "createdAt": "2026-11-16T05:30:51Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-11-16T03:24:31Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-11-16T03:24:21Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-11-16T00:00:53Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-09-28T19:40:54Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-10-25T20:44:53Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-11-16T19:54:42Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-11-16T05:31:00Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-10-21T16:50:09Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-11-16T00:01:16Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-09-17T06:09:01Z",
+      "mergedAt": "2026-10-21T09:10:32Z"
+     },
+     {
+      "createdAt": "2026-09-18T15:49:40Z",
+      "mergedAt": "2026-10-21T09:10:11Z"
+     },
+     {
+      "createdAt": "2026-10-07T13:10:35Z",
+      "mergedAt": "2026-10-21T09:09:50Z"
+     },
+     {
+      "createdAt": "2026-10-09T23:28:17Z",
+      "mergedAt": "2026-10-21T09:04:07Z"
+     },
+     {
+      "createdAt": "2026-10-09T23:28:35Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-10-03T21:03:33Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-09-23T01:34:18Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-10-10T01:37:21Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-10-10T01:37:14Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-09-15T10:01:27Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-09-15T09:12:24Z",
+      "mergedAt": "2026-09-15T17:57:08Z"
+     },
+     {
+      "createdAt": "2026-09-15T09:12:18Z",
+      "mergedAt": "2026-09-15T17:56:54Z"
+     },
+     {
+      "createdAt": "2026-09-15T10:01:33Z",
+      "mergedAt": "2026-09-15T17:45:47Z"
+     },
+     {
+      "createdAt": "2026-09-15T11:25:35Z",
+      "mergedAt": "2026-09-15T17:45:34Z"
+     },
+     {
+      "createdAt": "2026-09-15T09:04:06Z",
+      "mergedAt": "2026-09-15T09:11:17Z"
+     }
+    ]
+   },
+   "m_actions_head": {
+    "name": "main",
+    "target": {
+     "statusCheckRollup": null,
+     "checkSuites": {
+      "nodes": [
+       {
+        "status": "QUEUED",
+        "conclusion": null,
+        "app": {
+         "slug": "renovate"
+        },
+        "workflowRun": null
+       }
+      ]
+     }
+    }
+   },
+   "m_actions_workflows": {
+    "entries": [
+     {
+      "name": "workflow-1.yml"
+     },
+     {
+      "name": "workflow-4.yml"
+     }
+    ]
+   }
+  },
+  {
+   "id": "R_fixture_4",
+   "m_issues_open": {
+    "totalCount": 1,
+    "pageInfo": {
+     "hasNextPage": false,
+     "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0xMS0yNlQwNzozMDowNVrOhyKxQw=="
+    },
+    "nodes": [
+     {
+      "number": 7,
+      "title": "Titel 19",
+      "url": "https://github.com/owner-2/repo-4/issues/7",
+      "createdAt": "2024-04-27T21:39:57Z",
+      "updatedAt": "2026-11-26T07:30:05Z",
+      "author": {
+       "login": "renovate"
+      },
+      "comments": {
+       "totalCount": 0
+      },
+      "labels": {
+       "nodes": []
+      }
+     }
+    ]
+   },
+   "m_prs_open": {
+    "totalCount": 5,
+    "pageInfo": {
+     "hasNextPage": false
+    },
+    "nodes": [
+     {
+      "number": 227,
+      "title": "Titel 20",
+      "url": "https://github.com/owner-2/repo-4/pull/227",
+      "isDraft": false,
+      "createdAt": "2026-11-25T01:46:04Z",
+      "updatedAt": "2026-11-26T07:30:03Z",
+      "headRefName": "renovate/branch-14",
+      "author": {
+       "__typename": "Bot",
+       "login": "renovate"
+      },
+      "commits": {
+       "nodes": [
+        {
+         "commit": {
+          "statusCheckRollup": {
+           "state": "SUCCESS"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "number": 205,
+      "title": "Titel 21",
+      "url": "https://github.com/owner-2/repo-4/pull/205",
+      "isDraft": false,
+      "createdAt": "2026-09-09T20:16:42Z",
+      "updatedAt": "2026-10-17T23:18:55Z",
+      "headRefName": "dependabot/branch-15",
+      "author": {
+       "__typename": "Bot",
+       "login": "dependabot"
+      },
+      "commits": {
+       "nodes": [
+        {
+         "commit": {
+          "statusCheckRollup": {
+           "state": "SUCCESS"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "number": 204,
+      "title": "Titel 22",
+      "url": "https://github.com/owner-2/repo-4/pull/204",
+      "isDraft": false,
+      "createdAt": "2026-09-09T20:16:40Z",
+      "updatedAt": "2026-10-17T23:18:53Z",
+      "headRefName": "dependabot/branch-16",
+      "author": {
+       "__typename": "Bot",
+       "login": "dependabot"
+      },
+      "commits": {
+       "nodes": [
+        {
+         "commit": {
+          "statusCheckRollup": {
+           "state": "SUCCESS"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "number": 203,
+      "title": "Titel 23",
+      "url": "https://github.com/owner-2/repo-4/pull/203",
+      "isDraft": false,
+      "createdAt": "2026-09-03T20:47:08Z",
+      "updatedAt": "2026-10-17T23:18:53Z",
+      "headRefName": "dependabot/branch-17",
+      "author": {
+       "__typename": "Bot",
+       "login": "dependabot"
+      },
+      "commits": {
+       "nodes": [
+        {
+         "commit": {
+          "statusCheckRollup": {
+           "state": "SUCCESS"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "number": 202,
+      "title": "Titel 24",
+      "url": "https://github.com/owner-2/repo-4/pull/202",
+      "isDraft": false,
+      "createdAt": "2026-09-03T12:48:01Z",
+      "updatedAt": "2026-10-17T23:18:52Z",
+      "headRefName": "dependabot/branch-18",
+      "author": {
+       "__typename": "Bot",
+       "login": "dependabot"
+      },
+      "commits": {
+       "nodes": [
+        {
+         "commit": {
+          "statusCheckRollup": {
+           "state": "SUCCESS"
+          }
+         }
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "m_activity_pushedAt": "2026-11-26T07:30:07Z",
+   "m_activity_branch": {
+    "target": {
+     "commits7d": {
+      "totalCount": 1
+     },
+     "commits30d": {
+      "totalCount": 4
+     }
+    }
+   },
+   "m_activity_issues": {
+    "nodes": [
+     {
+      "createdAt": "2024-04-27T21:39:57Z",
+      "closedAt": null
+     }
+    ]
+   },
+   "m_activity_prs": {
+    "nodes": [
+     {
+      "createdAt": "2026-11-25T01:46:04Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-09-22T00:25:29Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-11-11T20:26:49Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-10-30T17:53:51Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-11-20T22:49:57Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-10-28T01:34:39Z",
+      "mergedAt": "2026-11-11T20:35:47Z"
+     },
+     {
+      "createdAt": "2026-10-18T20:31:00Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-10-28T23:42:04Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-09-11T00:33:06Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-10-17T23:13:16Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-09-29T19:28:36Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-10-03T10:02:00Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-10-17T23:37:48Z",
+      "mergedAt": "2026-10-17T23:39:04Z"
+     },
+     {
+      "createdAt": "2026-10-17T11:07:25Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-09-09T20:16:42Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-09-09T20:16:40Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-09-03T20:47:08Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-09-03T12:48:01Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-09-24T01:56:45Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-09-16T11:57:59Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-09-18T14:11:09Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-08-25T20:37:28Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-10-13T17:00:34Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-09-19T00:14:11Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-10-15T12:06:04Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-09-18T14:11:15Z",
+      "mergedAt": "2026-10-17T23:12:23Z"
+     },
+     {
+      "createdAt": "2026-07-30T10:09:43Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-09-11T12:35:36Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-08-25T20:37:00Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-08-06T21:14:46Z",
+      "mergedAt": null
+     }
+    ]
+   },
+   "m_actions_head": {
+    "name": "master",
+    "target": {
+     "statusCheckRollup": {
+      "state": "SUCCESS"
+     },
+     "checkSuites": {
+      "nodes": [
+       {
+        "status": "QUEUED",
+        "conclusion": null,
+        "app": {
+         "slug": "renovate"
+        },
+        "workflowRun": null
+       },
+       {
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "app": {
+         "slug": "github-actions"
+        },
+        "workflowRun": {
+         "databaseId": 45469429327,
+         "runNumber": 123,
+         "url": "https://github.com/owner-2/repo-4/actions/runs/45469429327",
+         "createdAt": "2026-11-24T19:21:56Z",
+         "updatedAt": "2026-11-24T19:22:27Z",
+         "event": "push",
+         "workflow": {
+          "name": "Workflow 4"
+         }
+        }
+       },
+       {
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "app": {
+         "slug": "github-actions"
+        },
+        "workflowRun": {
+         "databaseId": 45648517484,
+         "runNumber": 1236,
+         "url": "https://github.com/owner-2/repo-4/actions/runs/45648517484",
+         "createdAt": "2026-11-25T15:45:16Z",
+         "updatedAt": "2026-11-25T15:47:28Z",
+         "event": "schedule",
+         "workflow": {
+          "name": "Workflow 5"
+         }
+        }
+       }
+      ]
+     }
+    }
+   },
+   "m_actions_workflows": {
+    "entries": [
+     {
+      "name": "workflow-1.yml"
+     },
+     {
+      "name": "workflow-8.yml"
+     },
+     {
+      "name": "workflow-9.yml"
+     },
+     {
+      "name": "workflow-10.yml"
+     }
+    ]
+   }
+  },
+  {
+   "id": "R_fixture_5",
+   "m_issues_open": {
+    "totalCount": 1,
+    "pageInfo": {
+     "hasNextPage": false,
+     "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0xMS0yNlQwMToxMjoxNlrPAAAAAYJryl0="
+    },
+    "nodes": [
+     {
+      "number": 4,
+      "title": "Titel 25",
+      "url": "https://github.com/owner-2/repo-5/issues/4",
+      "createdAt": "2026-11-19T05:28:10Z",
+      "updatedAt": "2026-11-26T01:12:16Z",
+      "author": {
+       "login": "renovate"
+      },
+      "comments": {
+       "totalCount": 0
+      },
+      "labels": {
+       "nodes": []
+      }
+     }
+    ]
+   },
+   "m_prs_open": {
+    "totalCount": 0,
+    "pageInfo": {
+     "hasNextPage": false
+    },
+    "nodes": []
+   },
+   "m_activity_pushedAt": "2026-11-25T16:23:46Z",
+   "m_activity_branch": {
+    "target": {
+     "commits7d": {
+      "totalCount": 188
+     },
+     "commits30d": {
+      "totalCount": 207
+     }
+    }
+   },
+   "m_activity_issues": {
+    "nodes": [
+     {
+      "createdAt": "2026-11-19T05:28:10Z",
+      "closedAt": null
+     }
+    ]
+   },
+   "m_activity_prs": {
+    "nodes": [
+     {
+      "createdAt": "2026-11-23T05:29:19Z",
+      "mergedAt": "2026-11-23T06:14:48Z"
+     },
+     {
+      "createdAt": "2026-11-23T01:28:08Z",
+      "mergedAt": "2026-11-23T06:14:34Z"
+     },
+     {
+      "createdAt": "2026-11-23T01:27:59Z",
+      "mergedAt": "2026-11-23T06:14:10Z"
+     },
+     {
+      "createdAt": "2026-11-23T05:29:26Z",
+      "mergedAt": "2026-11-23T06:13:14Z"
+     },
+     {
+      "createdAt": "2026-11-19T06:15:18Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-11-19T06:17:30Z",
+      "mergedAt": "2026-11-19T06:21:33Z"
+     },
+     {
+      "createdAt": "2026-11-19T05:28:07Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-11-19T05:27:58Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-11-19T05:26:34Z",
+      "mergedAt": "2026-11-19T05:26:55Z"
+     }
+    ]
+   },
+   "m_actions_head": {
+    "name": "main",
+    "target": {
+     "statusCheckRollup": {
+      "state": "FAILURE"
+     },
+     "checkSuites": {
+      "nodes": [
+       {
+        "status": "QUEUED",
+        "conclusion": null,
+        "app": {
+         "slug": "renovate"
+        },
+        "workflowRun": null
+       },
+       {
+        "status": "COMPLETED",
+        "conclusion": "FAILURE",
+        "app": {
+         "slug": "github-actions"
+        },
+        "workflowRun": {
+         "databaseId": 45653393273,
+         "runNumber": 92,
+         "url": "https://github.com/owner-2/repo-5/actions/runs/45653393273",
+         "createdAt": "2026-11-25T16:23:49Z",
+         "updatedAt": "2026-11-25T16:28:45Z",
+         "event": "push",
+         "workflow": {
+          "name": "Workflow 6"
+         }
+        }
+       },
+       {
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "app": {
+         "slug": "github-actions"
+        },
+        "workflowRun": {
+         "databaseId": 45653393291,
+         "runNumber": 26,
+         "url": "https://github.com/owner-2/repo-5/actions/runs/45653393291",
+         "createdAt": "2026-11-25T16:23:49Z",
+         "updatedAt": "2026-11-25T16:30:44Z",
+         "event": "push",
+         "workflow": {
+          "name": "Workflow 7"
+         }
+        }
+       },
+       {
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "app": {
+         "slug": "github-actions"
+        },
+        "workflowRun": {
+         "databaseId": 45653393399,
+         "runNumber": 96,
+         "url": "https://github.com/owner-2/repo-5/actions/runs/45653393399",
+         "createdAt": "2026-11-25T16:23:49Z",
+         "updatedAt": "2026-11-25T16:28:22Z",
+         "event": "push",
+         "workflow": {
+          "name": "Workflow 8"
+         }
+        }
+       }
+      ]
+     }
+    }
+   },
+   "m_actions_workflows": {
+    "entries": [
+     {
+      "name": "workflow-1.yml"
+     },
+     {
+      "name": "workflow-11.yml"
+     },
+     {
+      "name": "workflow-12.yml"
+     },
+     {
+      "name": "workflow-5.yml"
+     }
+    ]
+   }
+  },
+  {
+   "id": "R_fixture_6",
+   "m_issues_open": {
+    "totalCount": 0,
+    "pageInfo": {
+     "hasNextPage": false,
+     "endCursor": null
+    },
+    "nodes": []
+   },
+   "m_prs_open": {
+    "totalCount": 0,
+    "pageInfo": {
+     "hasNextPage": false
+    },
+    "nodes": []
+   },
+   "m_activity_pushedAt": "2026-11-26T07:00:09Z",
+   "m_activity_branch": {
+    "target": {
+     "commits7d": {
+      "totalCount": 42
+     },
+     "commits30d": {
+      "totalCount": 180
+     }
+    }
+   },
+   "m_activity_issues": {
+    "nodes": []
+   },
+   "m_activity_prs": {
+    "nodes": [
+     {
+      "createdAt": "2024-09-04T15:27:25Z",
+      "mergedAt": null
+     }
+    ]
+   },
+   "m_actions_head": {
+    "name": "master",
+    "target": {
+     "statusCheckRollup": null,
+     "checkSuites": {
+      "nodes": [
+       {
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "app": {
+         "slug": "github-actions"
+        },
+        "workflowRun": {
+         "databaseId": 45775957499,
+         "runNumber": 813,
+         "url": "https://github.com/owner-2/repo-6/actions/runs/45775957499",
+         "createdAt": "2026-11-26T07:31:29Z",
+         "updatedAt": "2026-11-26T07:31:38Z",
+         "event": "schedule",
+         "workflow": {
+          "name": "Workflow 9"
+         }
+        }
+       }
+      ]
+     }
+    }
+   },
+   "m_actions_workflows": {
+    "entries": [
+     {
+      "name": "workflow-13.yml"
+     },
+     {
+      "name": "workflow-14.yml"
+     },
+     {
+      "name": "workflow-15.yml"
+     },
+     {
+      "name": "workflow-16.yml"
+     },
+     {
+      "name": "workflow-17.yml"
+     },
+     {
+      "name": "workflow-18.yml"
+     },
+     {
+      "name": "workflow-19.yml"
+     },
+     {
+      "name": "workflow-20.yml"
+     }
+    ]
+   }
+  },
+  {
+   "id": "R_fixture_7",
+   "m_issues_open": {
+    "totalCount": 0,
+    "pageInfo": {
+     "hasNextPage": false,
+     "endCursor": null
+    },
+    "nodes": []
+   },
+   "m_prs_open": {
+    "totalCount": 0,
+    "pageInfo": {
+     "hasNextPage": false
+    },
+    "nodes": []
+   },
+   "m_activity_pushedAt": "2026-11-26T08:17:43Z",
+   "m_activity_branch": {
+    "target": {
+     "commits7d": {
+      "totalCount": 3
+     },
+     "commits30d": {
+      "totalCount": 3
+     }
+    }
+   },
+   "m_activity_issues": {
+    "nodes": []
+   },
+   "m_activity_prs": {
+    "nodes": []
+   },
+   "m_actions_head": {
+    "name": "main",
+    "target": {
+     "statusCheckRollup": null,
+     "checkSuites": {
+      "nodes": []
+     }
+    }
+   },
+   "m_actions_workflows": null
+  },
+  {
+   "id": "R_fixture_8",
+   "m_issues_open": {
+    "totalCount": 1,
+    "pageInfo": {
+     "hasNextPage": false,
+     "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0xMS0yNlQwNjoxNTo0MVrPAAAAAVYxrHo="
+    },
+    "nodes": [
+     {
+      "number": 3,
+      "title": "Titel 26",
+      "url": "https://github.com/owner-1/repo-7/issues/3",
+      "createdAt": "2026-10-07T07:22:03Z",
+      "updatedAt": "2026-11-26T06:15:41Z",
+      "author": {
+       "login": "renovate"
+      },
+      "comments": {
+       "totalCount": 0
+      },
+      "labels": {
+       "nodes": []
+      }
+     }
+    ]
+   },
+   "m_prs_open": {
+    "totalCount": 1,
+    "pageInfo": {
+     "hasNextPage": false
+    },
+    "nodes": [
+     {
+      "number": 4,
+      "title": "Titel 27",
+      "url": "https://github.com/owner-1/repo-7/pull/4",
+      "isDraft": false,
+      "createdAt": "2026-10-07T07:37:56Z",
+      "updatedAt": "2026-11-15T12:51:15Z",
+      "headRefName": "renovate/branch-19",
+      "author": {
+       "__typename": "Bot",
+       "login": "renovate"
+      },
+      "commits": {
+       "nodes": [
+        {
+         "commit": {
+          "statusCheckRollup": {
+           "state": "SUCCESS"
+          }
+         }
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "m_activity_pushedAt": "2026-11-26T06:15:32Z",
+   "m_activity_branch": {
+    "target": {
+     "commits7d": {
+      "totalCount": 1
+     },
+     "commits30d": {
+      "totalCount": 6
+     }
+    }
+   },
+   "m_activity_issues": {
+    "nodes": [
+     {
+      "createdAt": "2026-10-07T07:22:03Z",
+      "closedAt": null
+     }
+    ]
+   },
+   "m_activity_prs": {
+    "nodes": [
+     {
+      "createdAt": "2026-11-25T23:33:43Z",
+      "mergedAt": "2026-11-26T06:15:30Z"
+     },
+     {
+      "createdAt": "2026-11-09T16:43:00Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-11-08T17:46:45Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-11-10T17:52:58Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-10-07T07:37:56Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-10-30T11:26:03Z",
+      "mergedAt": "2026-11-04T02:29:03Z"
+     },
+     {
+      "createdAt": "2026-10-11T21:52:28Z",
+      "mergedAt": null
+     },
+     {
+      "createdAt": "2026-10-07T07:22:01Z",
+      "mergedAt": "2026-10-07T07:38:45Z"
+     },
+     {
+      "createdAt": "2026-10-07T07:19:08Z",
+      "mergedAt": null
+     }
+    ]
+   },
+   "m_actions_head": {
+    "name": "main",
+    "target": {
+     "statusCheckRollup": {
+      "state": "SUCCESS"
+     },
+     "checkSuites": {
+      "nodes": [
+       {
+        "status": "QUEUED",
+        "conclusion": null,
+        "app": {
+         "slug": "renovate"
+        },
+        "workflowRun": null
+       },
+       {
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "app": {
+         "slug": "github-actions"
+        },
+        "workflowRun": {
+         "databaseId": 45766951896,
+         "runNumber": 50,
+         "url": "https://github.com/owner-1/repo-7/actions/runs/45766951896",
+         "createdAt": "2026-11-26T06:15:33Z",
+         "updatedAt": "2026-11-26T06:25:22Z",
+         "event": "push",
+         "workflow": {
+          "name": "Workflow 3"
+         }
+        }
+       },
+       {
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "app": {
+         "slug": "github-actions"
+        },
+        "workflowRun": {
+         "databaseId": 45766951903,
+         "runNumber": 29,
+         "url": "https://github.com/owner-1/repo-7/actions/runs/45766951903",
+         "createdAt": "2026-11-26T06:15:33Z",
+         "updatedAt": "2026-11-26T06:19:41Z",
+         "event": "push",
+         "workflow": {
+          "name": "Workflow 2"
+         }
+        }
+       },
+       {
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "app": {
+         "slug": "github-actions"
+        },
+        "workflowRun": {
+         "databaseId": 45766951919,
+         "runNumber": 57,
+         "url": "https://github.com/owner-1/repo-7/actions/runs/45766951919",
+         "createdAt": "2026-11-26T06:15:33Z",
+         "updatedAt": "2026-11-26T06:16:50Z",
+         "event": "push",
+         "workflow": {
+          "name": "Workflow 1"
+         }
+        }
+       },
+       {
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "app": {
+         "slug": "github-actions"
+        },
+        "workflowRun": {
+         "databaseId": 45766957105,
+         "runNumber": 9,
+         "url": "https://github.com/owner-1/repo-7/actions/runs/45766957105",
+         "createdAt": "2026-11-26T06:15:36Z",
+         "updatedAt": "2026-11-26T06:16:35Z",
+         "event": "dynamic",
+         "workflow": {
+          "name": "Workflow 10"
+         }
+        }
+       }
+      ]
+     }
+    }
+   },
+   "m_actions_workflows": {
+    "entries": [
+     {
+      "name": "workflow-1.yml"
+     },
+     {
+      "name": "workflow-2.yml"
+     },
+     {
+      "name": "workflow-5.yml"
+     }
+    ]
+   }
+  }
+ ]
+}
