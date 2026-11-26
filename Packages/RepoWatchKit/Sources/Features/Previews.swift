@@ -104,6 +104,18 @@ enum PreviewData {
                        issues: [], prs: [pr(7, "Update traefik to v3.4", kind: ["renovate": [:]], branch: "renovate/traefik-3.x", ci: "success", hours: 8)],
                        commits7d: 3, score: 9, headStatus: "failure",
                        runs: [run(202, "deploy", outcome: "failure", hours: 20), run(201, "deploy", outcome: "success", hours: 50)], workflows: 1),
+            repository("R4", "octo-org/website", pushedHoursAgo: 5,
+                       issues: [issue(41, "Dunkelmodus für die Startseite", hours: 30, labels: [("design", "c5def5")]),
+                                issue(40, "Links im Footer veraltet", hours: 70, labels: [("bug", "d73a4a")])],
+                       prs: [pr(88, "Update dependency astro to v6", kind: ["renovate": [:]], branch: "renovate/astro-6.x", ci: "failure", hours: 4),
+                             pr(87, "Update dependency typescript to v6", kind: ["renovate": [:]], branch: "renovate/typescript-6.x", ci: "success", hours: 20),
+                             pr(86, "Bump actions/checkout from 4 to 5", kind: ["dependabot": [:]], branch: "dependabot/github_actions/checkout-5", ci: "success", hours: 40)],
+                       commits7d: 7, score: 27, headStatus: "success",
+                       runs: [run(401, "Build", outcome: "success", hours: 5), run(402, "Build", outcome: "failure", hours: 4, branch: "renovate/astro-6.x")],
+                       workflows: 2),
+            repository("R5", "octocat/notes", pushedHoursAgo: 24 * 40,
+                       issues: [], prs: [], commits7d: 0, score: 0, headStatus: "success",
+                       runs: [run(501, "Lint", outcome: "success", hours: 24 * 40)], workflows: 1),
             repository("R3", "octo-org/dotfiles", pushedHoursAgo: 24 * 9,
                        issues: [issue(3, "Zsh-Startzeit messen", hours: 24 * 9, labels: [("enhancement", "a2eeef")])],
                        prs: [], commits7d: 0, score: 0, headStatus: nil, runs: [], workflows: 0),
@@ -117,6 +129,23 @@ enum PreviewData {
         ))
         if signedIn { model.loadPreview(state) }
         return model
+    }
+}
+
+extension AppModel {
+    /// Nur Debug: Demo-Daten statt echter Repos anzeigen (Screenshots für die README, `--demo`).
+    public func loadDemo() {
+        loadPreview(PreviewData.state)
+    }
+}
+
+extension AppConfiguration {
+    /// Nur Debug: alles im Arbeitsspeicher, kein Schlüsselbund, kein Cache auf der Platte (`--demo`).
+    public static func demo() -> AppConfiguration {
+        AppConfiguration(
+            oauthClientID: nil, tokenStore: InMemoryTokenStore(),
+            seenStateStore: InMemorySeenStateStore(), settingsStore: InMemorySettingsStore()
+        )
     }
 }
 

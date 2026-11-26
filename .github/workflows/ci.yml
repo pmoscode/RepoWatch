@@ -1,0 +1,38 @@
+# Tests und Build bei jedem Push auf main und jedem Pull Request (Plan Phase 6).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-and-build:
+    # Image mit Xcode 27 (Public Preview); das Projekt braucht das macOS-26-SDK oder neuer.
+    runs-on: xcode-27
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Xcode 27.2 wählen
+        run: sudo xcode-select --switch /Applications/Xcode_27.2.app
+
+      - name: XcodeGen installieren
+        run: brew install xcodegen
+
+      - name: Tests (Swift Package)
+        # CI=true schaltet den Schlüsselbund-Test ab; Runner haben keinen entsperrten Login-Schlüsselbund.
+        run: swift test --package-path Packages/RepoWatchKit
+
+      - name: App bauen (Debug)
+        run: |
+          xcodegen generate --quiet
+          xcodebuild -project RepoWatch.xcodeproj -scheme RepoWatch -configuration Debug \
+            -destination "generic/platform=macOS" -derivedDataPath build/DerivedData build

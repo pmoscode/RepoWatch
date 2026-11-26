@@ -19,7 +19,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         #endif
         #if DEBUG
-        let configuration = AppConfiguration.live(allowEnvironmentToken: true)
+        let configuration = ProcessInfo.processInfo.arguments.contains("--demo")
+            ? AppConfiguration.demo()
+            : AppConfiguration.live(allowEnvironmentToken: true)
         #else
         let configuration = AppConfiguration.live(allowEnvironmentToken: false)
         #endif
@@ -49,7 +51,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         self.settingsWindowController = settingsWindowController
         statusItemController.onOpenSettings = openSettings
 
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("--demo") {
+            // Demo-Daten ohne Token und ohne Netz, z. B. für Screenshots.
+            model.loadDemo()
+        } else {
+            model.start()
+        }
+        #else
         model.start()
+        #endif
 
         #if DEBUG
         runDebugLaunchArguments(model: model, panelController: panelController,

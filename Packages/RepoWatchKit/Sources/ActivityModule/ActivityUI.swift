@@ -224,7 +224,9 @@ struct ActivityDetailSection: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 Text("Commits pro Woche (52 Wochen)").font(.caption).foregroundStyle(.secondary)
-                if let weekly {
+                if let weekly, weekly.isEmpty {
+                    Text("Keine Daten").font(.caption).foregroundStyle(.tertiary)
+                } else if let weekly {
                     Sparkline(values: weekly).frame(height: 36)
                 } else if weeklyPending {
                     Text("GitHub berechnet die Statistik noch – gleich noch einmal öffnen.")
@@ -252,7 +254,10 @@ struct ActivityDetailSection: View {
     }
 
     private func load() async {
-        guard let services = context.services else { return }
+        guard let services = context.services else {
+            weekly = []
+            return
+        }
         let name = repository.meta.nameWithOwner
         do {
             weekly = try await ActivityModule.fetchWeeklyCommits(rest: services.rest, nameWithOwner: name)

@@ -11,7 +11,7 @@ struct FeaturesTests {
     func previewData() {
         let model = PreviewData.model()
         #expect(model.isSignedIn)
-        #expect(model.repositories.count == 3)
+        #expect(model.repositories.count == 5)
         #expect(model.repositories.allSatisfy { $0.payloads.count == 4 })
         // Alle vier Module liefern einen Reiter.
         #expect(model.enabledModuleUIs.compactMap { $0.tab(context: model.ui) }.count == 4)
@@ -23,7 +23,9 @@ struct FeaturesTests {
         #expect(model.menuBarIndicator.showsAlarm)
 
         model.updateSettings { $0.menuBarMode = .openItems }
-        #expect(model.menuBarIndicator.count == 2 + 3)
+        let expected = model.repositories.reduce(0) { $0 + $1.meta.openIssueCount + $1.meta.openPullRequestCount }
+        #expect(expected > 0)
+        #expect(model.menuBarIndicator.count == expected)
 
         model.updateSettings { $0.alarmDotEnabled = false }
         #expect(!model.menuBarIndicator.showsAlarm)

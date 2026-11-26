@@ -1,0 +1,5 @@
+# Das Image `xcode-27` ist bei GitHub noch Public Preview und actionlint unbekannt
+# (siehe https://github.com/actions/runner-images/issues/14404).
+self-hosted-runner:
+  labels:
+    - xcode-27

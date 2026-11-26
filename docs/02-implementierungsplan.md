@@ -206,11 +206,15 @@ Unterwegs gefunden und behoben: Im `RefreshScheduler` konnte ein Auslöser (z. B
 
 ## Phase 6 – Auslieferung · S
 
-- [ ] GitHub Actions: Build + Tests auf einem macOS-Runner bei jedem Push/PR (`xcodegen generate` → `xcodebuild test`)
-- [ ] Voraussetzung: Mitgliedschaft im Apple Developer Program, Zertifikat „Developer ID Application“, App-spezifisches Passwort bzw. API-Key für `notarytool` als CI-Secret
-- [ ] Signieren mit Developer ID, Notarisierung (`notarytool`), DMG oder ZIP
-- [ ] Release-Workflow bei Tags → Artefakt an das GitHub Release
-- [ ] README mit Screenshots, Anleitung zur Anmeldung, Datenschutz-Hinweis
+- [x] `scripts/build-release.sh <version>`: Release-Build (universell, Apple Silicon und Intel), DMG mit Verknüpfung zum Programme-Ordner, SHA-256-Prüfsumme; signiert und notarisiert nur, wenn die Zugangsdaten gesetzt sind, sonst ad hoc signiert. Lokal getestet (0.1.0, 3,3 MB, Signatur gültig, Berechtigungen nur Sandbox + Netzwerk)
+  - Unterwegs behoben: Versionsnummer kam nicht in der Info.plist an (stand immer auf „1.0“); `get-task-allow` war im Release-Build gesetzt (Apple hätte die Notarisierung abgelehnt)
+- [x] GitHub Actions **CI** (`.github/workflows/ci.yml`): bei Push auf `main` und bei PRs Tests + Debug-Build auf dem Image `xcode-27` (Xcode 27.2, wie lokal; noch Public Preview, Alternative `macos-26` mit Xcode 26.6)
+- [x] GitHub Actions **Release** (`.github/workflows/release.yml`): bei Tag `v*` Tests, DMG, optional Zertifikat in temporären Schlüsselbund + Notarisierung per App-Store-Connect-API-Schlüssel, GitHub Release mit Hinweis „nicht notarisiert“, falls ohne Secrets
+- [x] Beide Workflows mit `actionlint` (inkl. ShellCheck) geprüft
+- [x] README mit Screenshots (Demo-Daten über `--demo`, keine echten Repos), Installation, Anmeldung, Datenschutz, Entwicklung, Release und Secrets
+- [ ] **Von dir:** Apple Developer Program, Zertifikat „Developer ID Application“ exportieren, App-Store-Connect-API-Schlüssel anlegen, Secrets im Repo hinterlegen (Liste in der README)
+- [ ] **Nach dem Push prüfen:** erster CI-Lauf auf GitHub (lokal nicht ausführbar); dann Tag `v0.1.0` für das erste Release
+- [ ] Offen: Lizenz festlegen (noch keine `LICENSE`-Datei im öffentlichen Repo)
 
 ---
 

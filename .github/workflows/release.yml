@@ -1,0 +1,101 @@
+# Release bei einem Tag wie v1.0.0: Tests, DMG bauen, ggf. signieren und notarisieren,
+# an ein GitHub Release hängen (Plan Phase 6, Konzept E3).
+#
+# Secrets (alle optional – ohne sie entsteht ein ad hoc signiertes DMG):
+#   DEVELOPER_ID_CERT_P12        Base64 des exportierten „Developer ID Application“-Zertifikats (.p12)
+#   DEVELOPER_ID_CERT_PASSWORD   Passwort der .p12-Datei
+#   DEVELOPER_ID_IDENTITY        z. B. "Developer ID Application: Max Muster (ABCDE12345)"
+#   DEVELOPER_TEAM_ID            z. B. ABCDE12345
+#   NOTARY_API_KEY               Inhalt der .p8-Datei eines App-Store-Connect-API-Schlüssels
+#   NOTARY_KEY_ID / NOTARY_ISSUER_ID
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: xcode-27
+    timeout-minutes: 45
+    env:
+      HAS_SIGNING: ${{ secrets.DEVELOPER_ID_CERT_P12 != '' }}
+      HAS_NOTARY: ${{ secrets.NOTARY_API_KEY != '' }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Xcode 27.2 wählen
+        run: sudo xcode-select --switch /Applications/Xcode_27.2.app
+
+      - name: XcodeGen installieren
+        run: brew install xcodegen
+
+      - name: Tests
+        run: swift test --package-path Packages/RepoWatchKit
+
+      - name: Zertifikat in temporären Schlüsselbund importieren
+        if: env.HAS_SIGNING == 'true'
+        env:
+          CERT_P12: ${{ secrets.DEVELOPER_ID_CERT_P12 }}
+          CERT_PASSWORD: ${{ secrets.DEVELOPER_ID_CERT_PASSWORD }}
+        run: |
+          KEYCHAIN="$RUNNER_TEMP/signing.keychain-db"
+          KEYCHAIN_PASSWORD="$(uuidgen)"
+          echo "$CERT_P12" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security import "$RUNNER_TEMP/cert.p12" -P "$CERT_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN"
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN" > /dev/null
+          # Temporären Schlüsselbund vorn in die Suchliste
+          read -r -a EXISTING <<< "$(security list-keychains -d user | tr -d '"' | xargs)"
+          security list-keychains -d user -s "$KEYCHAIN" "${EXISTING[@]}"
+          rm -f "$RUNNER_TEMP/cert.p12"
+
+      - name: Notarisierungs-Schlüssel ablegen
+        if: env.HAS_NOTARY == 'true'
+        env:
+          NOTARY_API_KEY: ${{ secrets.NOTARY_API_KEY }}
+        run: |
+          printf '%s' "$NOTARY_API_KEY" > "$RUNNER_TEMP/notary.p8"
+          echo "NOTARY_KEY_PATH=$RUNNER_TEMP/notary.p8" >> "$GITHUB_ENV"
+
+      - name: DMG bauen
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+          DEVELOPER_ID_IDENTITY: ${{ secrets.DEVELOPER_ID_IDENTITY }}
+          DEVELOPER_TEAM_ID: ${{ secrets.DEVELOPER_TEAM_ID }}
+          NOTARY_KEY_ID: ${{ secrets.NOTARY_KEY_ID }}
+          NOTARY_ISSUER_ID: ${{ secrets.NOTARY_ISSUER_ID }}
+        run: scripts/build-release.sh "${GITHUB_REF_NAME#v}"
+
+      - name: GitHub Release anlegen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          NOTES="$RUNNER_TEMP/notes.md"
+          if grep -q "signed=1" build/release/build-info && [ "$HAS_NOTARY" = "true" ]; then
+            echo "Signiert und von Apple notarisiert." > "$NOTES"
+          else
+            {
+              echo "**Nicht notarisiert.** macOS blockiert den ersten Start:"
+              echo "RepoWatch in den Programme-Ordner ziehen, dann mit Rechtsklick → *Öffnen* starten"
+              echo "(oder Systemeinstellungen → Datenschutz & Sicherheit → *Trotzdem öffnen*)."
+            } > "$NOTES"
+          fi
+          if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" build/release/*.dmg build/release/*.sha256 --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" build/release/*.dmg build/release/*.sha256 \
+              --title "RepoWatch $VERSION" --notes-file "$NOTES" --generate-notes
+          fi
+
+      - name: Schlüssel aufräumen
+        if: always()
+        run: |
+          security delete-keychain "$RUNNER_TEMP/signing.keychain-db" 2>/dev/null || true
+          rm -f "$RUNNER_TEMP/notary.p8"
