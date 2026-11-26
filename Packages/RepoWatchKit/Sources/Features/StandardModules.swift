@@ -31,7 +31,8 @@ public struct StandardModules: Sendable {
 
     @MainActor
     public func userInterfaces() -> [any ModuleUI] {
-        [IssuesUI(), PullRequestsUI(), ActivityUI(), ActionsUI(module: actions)]
+        // Renovate ist ein reines Darstellungs-Modul über den Daten des PR-Moduls.
+        [IssuesUI(), PullRequestsUI(), RenovateUI(), ActivityUI(), ActionsUI(module: actions)]
     }
 }
 

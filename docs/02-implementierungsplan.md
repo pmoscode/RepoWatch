@@ -226,7 +226,7 @@ Unterwegs gefunden und behoben: Im `RefreshScheduler` konnte ein Auslöser (z. B
 | Einzelne Checks eines PRs aufklappen (welcher Job ist rot) | Erweiterung von `PullRequestsModule` | ActionsModule |
 | Fehlgeschlagene Runs neu starten / Logs-Ausschnitt anzeigen | Aktion im `ActionsModule` (Schreibrecht nötig) | ActionsModule |
 | Review-Status / Review-Anfragen an mich | `GlobalInsightModule` (Suche `review-requested:@me`) | ModuleKit |
-| Renovate-Sammelansicht (alle Dependency-PRs, gruppiert nach Paket) | eigener Reiter | Klassifizierung |
+| ~~Renovate-Sammelansicht~~ → **umgesetzt (26.11.2026)** als Reiter „Renovate“: Org → Repo → PRs mit CI-Status, Links auf die gefilterte PR-Liste je Repo (`/pulls?q=is:pr is:open author:app/renovate`) und je Org; Repos und Orgs mit roten Checks oben und aufgeklappt. Reines Darstellungs-Modul (`RenovateUI`) über den Daten des PR-Moduls, keine zusätzlichen API-Abfragen. Gruppierung nach Paket bei Bedarf später | eigener Reiter | Klassifizierung |
 | Releases & Tags | `InsightModule` | |
 | Desktop-Widget (WidgetKit) | liest den SnapshotStore über eine App Group | Persistence |
 | Globaler Hotkey | Panel per Code öffnen (bereits möglich) | `PanelController` |

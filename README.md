@@ -3,9 +3,9 @@
 Eine kleine, native Menüleisten-App für macOS, die alle GitHub-Repositories im Blick behält, auf die
 dein Account Zugriff hat: offene Issues, Pull Requests nach Autor, Aktivität und GitHub-Actions-Runs.
 
-| Übersicht | Pull Requests | Actions | Details |
-|---|---|---|---|
-| ![Übersicht](docs/images/overview.png) | ![Pull Requests](docs/images/pull-requests.png) | ![Actions](docs/images/actions.png) | ![Details](docs/images/detail.png) |
+| Übersicht | Pull Requests | Renovate | Actions | Details |
+|---|---|---|---|---|
+| ![Übersicht](docs/images/overview.png) | ![Pull Requests](docs/images/pull-requests.png) | ![Renovate](docs/images/renovate.png) | ![Actions](docs/images/actions.png) | ![Details](docs/images/detail.png) |
 
 *(Screenshots mit Demo-Daten.)*
 
@@ -15,6 +15,9 @@ dein Account Zugriff hat: offene Issues, Pull Requests nach Autor, Aktivität un
   „Dependency Dashboard“ lassen sich ausblenden.
 - **Pull Requests** nach Autor gruppiert: von Menschen, von dir, Renovate, Dependabot, andere Bots.
   Bot-Gruppen sind eingeklappt, rote Checks auf einen Blick.
+- **Renovate:** eigener Reiter mit allen Renovate-PRs, gegliedert nach Org → Repo → PR, mit
+  CI-Status (✗/✓/ausstehend) und Links auf die gefilterte PR-Liste je Repo und je Org. Rote
+  Checks stehen oben und sind aufgeklappt.
 - **Aktivität:** Commits der letzten 7/30 Tage, neue und geschlossene Issues und PRs, eine
   Aktivitätsstufe relativ zu deinen Repos, Wochen-Grafik und Ereignis-Feed.
 - **GitHub Actions:** Status des Standard-Branches, fehlgeschlagene Workflows mit „rot seit …“,
@@ -96,7 +99,7 @@ Startparameter für Debug-Builds:
 |---|---|
 | Umgebungsvariable `GITHUB_TOKEN` | Token statt Schlüsselbund, z. B. `open --env "GITHUB_TOKEN=$(gh auth token)" RepoWatch.app` |
 | `--demo` | Demo-Daten ohne Token und ohne Netz |
-| `--show-panel`, `--tab <issues\|prs\|activity\|actions>`, `--repo <name>` | Panel direkt öffnen, Reiter bzw. Repo wählen |
+| `--show-panel`, `--tab <issues\|prs\|renovate\|activity\|actions>`, `--repo <name>` | Panel direkt öffnen, Reiter bzw. Repo wählen |
 | `--show-settings` | Einstellungsfenster öffnen |
 | `--snapshot <name>` | nach 7 s ein PNG in den Sandbox-Container schreiben (`~/Library/Containers/de.pmoscode.repowatch/Data/tmp/`) |
 | `--no-glass`, `--appearance light\|dark` | für Screenshots: ohne Glas-Ebene, festes Erscheinungsbild |

@@ -13,8 +13,9 @@ struct FeaturesTests {
         #expect(model.isSignedIn)
         #expect(model.repositories.count == 5)
         #expect(model.repositories.allSatisfy { $0.payloads.count == 4 })
-        // Alle vier Module liefern einen Reiter.
-        #expect(model.enabledModuleUIs.compactMap { $0.tab(context: model.ui) }.count == 4)
+        // Vier Daten-Module plus der Renovate-Reiter.
+        #expect(model.enabledModuleUIs.compactMap { $0.tab(context: model.ui) }.map(\.id.rawValue)
+            == ["issues", "prs", "renovate", "activity", "actions"])
     }
 
     @Test("Menüleiste: Alarm, Zähler je Modus, abschaltbar")
