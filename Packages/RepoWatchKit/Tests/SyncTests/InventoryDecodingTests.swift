@@ -2,6 +2,7 @@ import Domain
 import Foundation
 import GitHubAPI
 import Testing
+import TestSupport
 @testable import Sync
 
 /// Fixtures stammen aus echten Antworten (Phase-0-Spike) und sind anonymisiert.
@@ -31,7 +32,7 @@ struct InventoryDecodingTests {
 
     @Test("Abbildung auf RepoMeta übernimmt Zähler und Flags")
     func mapsToRepoMeta() throws {
-        let repos = try decodePage().viewer.repositories.nodes.map(\.repoMeta)
+        let repos = try decodePage().viewer.repositories.nodes.compactMap { $0?.repoMeta }
         let archived = try #require(repos.first { $0.isArchived })
         #expect(archived.nameWithOwner == "owner-1/repo-1")
         #expect(archived.owner == "owner-1")
@@ -58,18 +59,48 @@ struct InventoryDecodingTests {
         let result: GraphQLResult<InventoryResponse> = try GraphQLClient.decode(
             try JSONSerialization.data(withJSONObject: json)
         )
-        #expect(result.data.viewer.repositories.nodes[0].repoMeta.pushedAt == nil)
+        #expect(result.data.viewer.repositories.nodes[0]?.repoMeta.pushedAt == nil)
     }
 
     @Test("Summen im Snapshot")
     func snapshotTotals() throws {
-        let repos = try decodePage().viewer.repositories.nodes.map(\.repoMeta)
+        let repos = try decodePage().viewer.repositories.nodes.compactMap { $0?.repoMeta }
         let snapshot = InventorySnapshot(
             viewerLogin: "viewer", repositories: repos, fetchedAt: .now,
             totalCost: 1, pageCount: 1, rateLimit: nil
         )
         #expect(snapshot.totalOpenIssues == repos.map(\.openIssueCount).reduce(0, +))
         #expect(snapshot.totalOpenPullRequests == repos.map(\.openPullRequestCount).reduce(0, +))
+    }
+}
+
+@Suite("Gesperrte Organisationen")
+struct AccessRestrictionTests {
+    @Test("Org-Name aus GitHubs Meldung")
+    func parsesOrganization() {
+        let message = "Although you appear to have the correct authorization credentials, the `freie-schule` organization has enabled OAuth App access restrictions, meaning that data access to third-parties is limited."
+        #expect(AccessRestriction.organization(fromErrorMessage: message) == "freie-schule")
+        #expect(AccessRestriction.organization(fromErrorMessage: "Resource not accessible by integration") == nil)
+    }
+
+    @Test("Gesperrtes Repo als null-Knoten: Rest des Bestands bleibt lesbar, Org wird gemeldet")
+    func nullNodeWithRestriction() async throws {
+        let body = #"""
+        {"data":{"viewer":{"login":"viewer","repositories":{"totalCount":2,"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[
+          {"id":"R1","nameWithOwner":"me/app","url":"https://github.com/me/app","isPrivate":false,"isFork":false,"isArchived":false,
+           "pushedAt":"2026-11-20T10:00:00Z","updatedAt":"2026-11-20T10:00:00Z","issues":{"totalCount":1},"pullRequests":{"totalCount":0}},
+          null]}},"rateLimit":{"limit":5000,"cost":1,"remaining":4999,"resetAt":"2030-01-01T00:00:00Z"}},
+         "errors":[{"type":"FORBIDDEN","path":["viewer","repositories","nodes",1],
+          "message":"Although you appear to have the correct authorization credentials, the `locked-org` organization has enabled OAuth App access restrictions, meaning that data access to third-parties is limited."}]}
+        """#
+        let (session, baseURL) = MockURLProtocol.makeSession { (.make(200, for: $0), Data(body.utf8)) }
+        let client = GraphQLClient(
+            transport: HTTPTransport(tokenProvider: StaticTokenProvider("t"), session: session),
+            endpoint: baseURL.appending(path: "graphql")
+        )
+        let snapshot = try await InventoryFetcher(client: client).fetchAll()
+        #expect(snapshot.repositories.map(\.nameWithOwner) == ["me/app"])
+        #expect(snapshot.restrictedOrganizations == ["locked-org"])
     }
 }
 

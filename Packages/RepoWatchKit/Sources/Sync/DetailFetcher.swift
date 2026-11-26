@@ -74,7 +74,11 @@ struct DetailFetcher: Sendable {
                 let node = index < result.data.nodes.count ? result.data.nodes[index] : .null
                 if case .null = node {
                     let message = result.partialErrors.first { $0.path?.dropFirst().first == String(index) }?.message
-                    outcome.failures[id] = message ?? String(localized: "Repository nicht abrufbar")
+                    if let message, let organization = AccessRestriction.organization(fromErrorMessage: message) {
+                        outcome.failures[id] = String(localized: "Organisation \(organization) sperrt den Zugriff von RepoWatch (OAuth-Beschränkung).")
+                    } else {
+                        outcome.failures[id] = message ?? String(localized: "Repository nicht abrufbar")
+                    }
                     continue
                 }
                 do {

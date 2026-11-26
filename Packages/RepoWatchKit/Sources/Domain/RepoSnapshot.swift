@@ -125,6 +125,8 @@ public struct SyncState: Codable, Sendable, Equatable {
     public var rateLimit: RateLimitInfo?
     /// Beobachtete, gefilterte Repos, zuletzt gepusht zuerst.
     public var repositories: [RepoSnapshot]
+    /// Organisationen, die die OAuth-App sperren (optional, damit ältere Caches lesbar bleiben).
+    public var restrictedOrganizations: [String]?
 
     public init(
         viewerLogin: String,

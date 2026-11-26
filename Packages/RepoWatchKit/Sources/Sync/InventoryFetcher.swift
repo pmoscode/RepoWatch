@@ -42,6 +42,7 @@ public struct InventoryFetcher: Sendable {
         var pageCount = 0
         var login = ""
         var rateLimit: RateLimitInfo?
+        var restricted: Set<String> = []
 
         repeat {
             let operation = GraphQLOperation<InventoryResponse>(
@@ -52,10 +53,17 @@ public struct InventoryFetcher: Sendable {
                     "pageSize": .int(Self.pageSize),
                 ]
             )
-            let page = try await client.send(operation).data
+            let result = try await client.send(operation)
+            let page = result.data
             pageCount += 1
             login = page.viewer.login
-            repositories += page.viewer.repositories.nodes.map(\.repoMeta)
+            // Gesperrte Repos kommen als `null` mit Teilfehler; die übrigen bleiben nutzbar.
+            repositories += page.viewer.repositories.nodes.compactMap { $0?.repoMeta }
+            for error in result.partialErrors {
+                if let organization = AccessRestriction.organization(fromErrorMessage: error.message) {
+                    restricted.insert(organization)
+                }
+            }
             totalCost += page.rateLimit?.cost ?? 0
             rateLimit = page.rateLimit?.info
             let info = page.viewer.repositories.pageInfo
@@ -70,7 +78,8 @@ public struct InventoryFetcher: Sendable {
             fetchedAt: now(),
             totalCost: totalCost,
             pageCount: pageCount,
-            rateLimit: rateLimit
+            rateLimit: rateLimit,
+            restrictedOrganizations: restricted.sorted()
         )
     }
 }
@@ -89,7 +98,7 @@ public struct InventoryResponse: Decodable, Sendable {
     public struct Connection: Decodable, Sendable {
         public let totalCount: Int
         public let pageInfo: PageInfo
-        public let nodes: [Node]
+        public let nodes: [Node?]
     }
 
     public struct PageInfo: Decodable, Sendable {

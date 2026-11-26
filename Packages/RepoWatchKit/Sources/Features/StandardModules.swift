@@ -10,11 +10,14 @@ import PullRequestsModule
 /// einmal für die Daten (`InsightModule`), einmal für die Darstellung (`ModuleUI`).
 public struct StandardModules: Sendable {
     public let authorRules: SharedValue<AuthorRules>
+    /// Auslöser ohne Alarm (Einstellungen → Actions).
+    public let ignoredWorkflowEvents: SharedValue<Set<String>>
     let actions: ActionsModule
 
-    public init(authorRules: SharedValue<AuthorRules>) {
+    public init(authorRules: SharedValue<AuthorRules>, ignoredWorkflowEvents: SharedValue<Set<String>> = SharedValue([])) {
         self.authorRules = authorRules
-        actions = ActionsModule(rules: authorRules)
+        self.ignoredWorkflowEvents = ignoredWorkflowEvents
+        actions = ActionsModule(rules: authorRules, ignoredEvents: ignoredWorkflowEvents)
     }
 
     public func registry() throws -> ModuleRegistry {

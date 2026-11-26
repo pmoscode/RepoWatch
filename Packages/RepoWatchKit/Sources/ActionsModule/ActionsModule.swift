@@ -45,10 +45,17 @@ public struct ActionsModule: InsightModule {
 
     public let metadata = ModuleMetadata(title: String(localized: "Actions"), systemImage: "gearshape.2", defaultOrder: 40)
     private let rules: SharedValue<AuthorRules>
+    /// Auslöser, die keinen Alarm auslösen (Einstellungen → Actions), z. B. `dynamic` für GitHubs eigene Läufe.
+    private let ignoredEvents: SharedValue<Set<String>>
     private let now: @Sendable () -> Date
 
-    public init(rules: SharedValue<AuthorRules> = SharedValue(.default), now: @escaping @Sendable () -> Date = Date.init) {
+    public init(
+        rules: SharedValue<AuthorRules> = SharedValue(.default),
+        ignoredEvents: SharedValue<Set<String>> = SharedValue([]),
+        now: @escaping @Sendable () -> Date = Date.init
+    ) {
         self.rules = rules
+        self.ignoredEvents = ignoredEvents
         self.now = now
     }
 
@@ -193,8 +200,9 @@ public struct ActionsModule: InsightModule {
 
     /// Workflow-Zustände, die nach E7 Alarm auslösen: Standard-Branch oder PR eines Menschen (inkl. mir).
     public func alertingStates(_ payload: ActionsPayload, viewerLogin: String) -> [WorkflowState] {
-        payload.workflowStates.filter { state in
-            guard state.isFailing else { return false }
+        let ignored = ignoredEvents.value
+        return payload.workflowStates.filter { state in
+            guard state.isFailing, !ignored.contains(state.latest.event) else { return false }
             if state.branch == nil || state.branch == payload.defaultBranch { return true }
             let run = state.latest
             return run.event.hasPrefix("pull_request") && authorKind(of: run, viewerLogin: viewerLogin).isPerson
@@ -204,7 +212,10 @@ public struct ActionsModule: InsightModule {
     public func summarize(_ payload: ActionsPayload, context: ModuleContext) -> ModuleSummary {
         let states = payload.workflowStates
         let alerting = alertingStates(payload, viewerLogin: context.viewerLogin)
-        let headFailing = payload.headStatus == .failure
+        // Roter Gesamtstatus zählt nicht, wenn er nur von ausgeblendeten Auslösern stammt.
+        let failingHeadRuns = payload.headRuns.filter { $0.outcome == .failure }
+        let onlyIgnoredFailures = !failingHeadRuns.isEmpty && failingHeadRuns.allSatisfy { ignoredEvents.value.contains($0.event) }
+        let headFailing = payload.headStatus == .failure && !onlyIgnoredFailures
         return ModuleSummary(
             counts: [
                 "workflows": payload.workflowFileCount,

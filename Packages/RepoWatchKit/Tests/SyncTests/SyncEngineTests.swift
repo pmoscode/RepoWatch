@@ -165,6 +165,31 @@ struct SyncEngineTests {
     }
 }
 
+@Suite("Viele Repos")
+struct ScaleTests {
+    @Test("350 Repos: 35 Pakete, alle mit Daten, Cache-Rundweg")
+    func manyRepositories() async throws {
+        let repos = (1...350).map { FakeGitHub.Repo(id: "R\($0)", name: "org\($0 % 7)/repo-\($0)", openIssues: $0 % 13) }
+        let github = FakeGitHub(repos: repos)
+        let store = InMemorySnapshotStore()
+        let engine = try makeEngine(github, store: store)
+
+        let clock = ContinuousClock()
+        let started = clock.now
+        let outcome = try await engine.sync(full)
+        let duration = clock.now - started
+
+        #expect(outcome.state.repositories.count == 350)
+        #expect(outcome.stats.detail.requests == 35)
+        #expect(outcome.state.repositories.allSatisfy { $0.payloads[CountModule.id] != nil })
+        // Ohne Netz ist das reine Rechenzeit; großzügige Grenze, damit der Test nicht wackelt.
+        #expect(duration < .seconds(5), "Sync dauerte \(duration)")
+
+        let restored = await (try makeEngine(FakeGitHub(repos: []), store: store)).restore()
+        #expect(restored?.repositories.count == 350)
+    }
+}
+
 @Suite("Filter")
 struct SyncFilterTests {
     @Test func rules() {

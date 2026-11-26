@@ -22,7 +22,9 @@ public struct ModuleServices: Sendable {
 @MainActor
 @Observable
 public final class ModuleUIContext {
-    public var repositories: [RepoSnapshot] = []
+    public var repositories: [RepoSnapshot] = [] {
+        didSet { memoStorage.removeAll() }
+    }
     public var viewerLogin = ""
     public var settings = AppSettings()
     public var seen = SeenState()
@@ -38,6 +40,17 @@ public final class ModuleUIContext {
 
     public init(services: ModuleServices?) {
         self.services = services
+    }
+
+    /// Zwischenspeicher für Werte, die nur von `repositories` abhängen (z. B. Aktivitätsstufen über alle
+    /// Repos). Wird bei neuen Daten geleert; so rechnet nicht jede Zeile alles neu.
+    @ObservationIgnored private var memoStorage: [String: Any] = [:]
+
+    public func memo<Value>(_ key: String, compute: () -> Value) -> Value {
+        if let cached = memoStorage[key] as? Value { return cached }
+        let value = compute()
+        memoStorage[key] = value
+        return value
     }
 
     public func repository(id: String) -> RepoSnapshot? {

@@ -179,22 +179,28 @@ Unterwegs gefunden und behoben: Im `RefreshScheduler` konnte ein Auslöser (z. B
 - [x] **Detailansicht** (eigene Navigation im Panel, ⌘[ bzw. ⌘← zurück): Kopf mit Favorit und „Auf GitHub“, je Modul ein Abschnitt (Issues mit „Weitere laden“, PRs, Aktivität mit Kennzahlen, Wochen-Sparkline und Ereignissen, Actions mit Workflow-Zuständen und letzten Runs); markiert das Repo als gesehen
 - [x] **Einstellungsfenster** (eigenes `NSWindow`, weil das `Settings`-Szenen-Fenster aus einer App ohne Dock-Icon nicht zuverlässig nach vorn kommt) mit Konto, Repositories, Pull Requests, Actions, Aktualisierung, Module, Allgemein; Einstellungen werden in den `UserDefaults` gespeichert und wirken sofort (Filter, Regeln und Module lösen einen Sync aus)
 - [x] Debug-Startparameter für Screenshots: `--show-panel`, `--tab <id>`, `--repo <name>`, `--show-settings`, `--snapshot <name>`, `--no-glass`
-- [ ] SwiftUI-Previews mit Beispieldaten (noch nicht angelegt; die Ansichten wurden per Snapshot mit echten Daten geprüft)
-- [ ] **Von Hand prüfen:** Farben und Lesbarkeit auf der echten Glas-Ebene (Snapshots zeigen die Glas-Ebene nicht; ohne sie stimmen Farben und Kontraste), Tastaturbedienung, Kontextmenüs, Einstellungsfenster
+- [x] SwiftUI-Previews mit Beispieldaten (in Phase 5 nachgeholt: `Features/Previews.swift`)
+- [x] **Von Hand geprüft (26.11.2026):** Farben und Lesbarkeit auf der echten Glas-Ebene (Snapshots zeigen die Glas-Ebene nicht; ohne sie stimmen Farben und Kontraste), Tastaturbedienung, Kontextmenüs, Einstellungsfenster
 
-**Fertig, wenn:** Alle vier Anforderungen (Issues, PRs mit Autor-Art, Aktivität, Actions-Runs) im Popover von Anfang bis Ende funktionieren, mit echten Daten. → erfüllt, bis auf die Prüfung von Hand.
+**Fertig, wenn:** Alle vier Anforderungen (Issues, PRs mit Autor-Art, Aktivität, Actions-Runs) im Popover von Anfang bis Ende funktionieren, mit echten Daten. → erfüllt.
 
 ---
 
 ## Phase 5 – Feinschliff · M
 
-- [ ] Start bei Anmeldung (`SMAppService.mainApp`)
-- [ ] Lokalisierung Deutsch/Englisch (String Catalog)
-- [ ] Barrierefreiheit: VoiceOver-Beschriftungen, Dynamic Type soweit unter macOS möglich, Kontraste
-- [ ] Hell/Dunkel, Liquid Glass prüfen
-- [ ] Performance mit 300+ Repos (ggf. künstliche Fixtures): flüssiges Scrollen, Speicherbedarf, Abfragekosten
-- [ ] Netzwerk- und Fehlerfälle: offline, Token widerrufen, Rate-Limit erreicht, Organisation blockiert die OAuth-App (Hinweis + Link zur Freigabe)
-- [ ] Logging über `os.Logger` aufräumen (keine Tokens, keine privaten Titel auf Stufe `public`)
+- [x] Start bei Anmeldung (`SMAppService.mainApp`, Einstellungen → Allgemein); der Zustand kommt aus macOS, inkl. Hinweis, wenn macOS noch zustimmen muss
+- [ ] ~~Lokalisierung Deutsch/Englisch~~ → **zurückgestellt** (Backlog): Texte in Swift-Packages werden im Bundle des Packages nachgeschlagen, nicht in dem der App. Englisch hieße, rund 200 Texte in 8 Targets auf `bundle: .module` umzustellen; für eine App, die nur auf Deutsch genutzt wird, lohnt das jetzt nicht
+- [x] Barrierefreiheit: VoiceOver-Beschriftungen für alle reinen Symbol-Knöpfe, Status-Symbole, Aktivitätspunkte, Autor-Art; Repo-Zeilen als ein Element mit Hinweis
+- [x] Hell/Dunkel geprüft (Snapshots mit `--appearance light|dark --no-glass`), Liquid Glass von Hand geprüft (Phase 4)
+- [x] Performance: Test mit 350 Repos (35 Pakete, Cache-Rundweg, 40 ms gegen den Simulator); Aktivitätsstufen werden nicht mehr pro Zeile über alle Repos neu berechnet (vorher quadratisch), sondern einmal pro neuem Stand (`ModuleUIContext.memo`). Abschätzung echte API: ca. 4 Bestandsseiten und 35 Detail-Pakete ≈ 200 Punkte pro Voll-Durchlauf; durch den gestuften Takt werden ruhende Repos nur alle 30 Min. abgefragt
+- [x] Netzwerk- und Fehlerfälle:
+  - [x] offline / Rate-Limit: alter Stand bleibt sichtbar, „Stand von …“, nächster Versuch im Tooltip (Phase 2)
+  - [x] Token widerrufen: automatisch abmelden mit Hinweis (Phase 1/2)
+  - [x] **Organisation sperrt die OAuth-App:** Gesperrte Repos kommen im Bestand als `null` mit Teilfehler – vorher hätte **ein** gesperrtes Repo den ganzen Bestand scheitern lassen. Jetzt: Rest bleibt nutzbar, gesperrte Organisationen werden erkannt, Hinweis in der Übersicht mit Link zur Freigabe (bei OAuth direkt zur App-Seite in den GitHub-Einstellungen); Detail-Fehler mit verständlicher Meldung
+- [x] Ausgeblendete Auslöser (Einstellungen → Actions) gelten jetzt auch für den **Alarm**, z. B. `dynamic` für GitHubs eigene „Graph Update“-Läufe
+- [x] Logging geprüft: keine Tokens; freigegeben (`.public`) sind nur Fehlerbeschreibungen, Zahlen und Zeiten, Repo-Namen bleiben `.private`
+- [x] SwiftUI-Previews (Panel, Anmeldung, Einstellungen) mit Beispieldaten; ein Test baut die Beispieldaten wirklich auf
+- [x] Tests: 94 (neu u. a. gesperrte Organisation, ausgeblendete Auslöser, 350 Repos, Menüleisten-Anzeige, Einstellungen mit Standardwerten)
 
 ---
 
@@ -223,6 +229,7 @@ Unterwegs gefunden und behoben: Im `RefreshScheduler` konnte ein Auslöser (z. B
 | Mehrere Accounts / GitHub Enterprise | `AccountContext` pro Client | GitHubAPI |
 | Automatische Updates (Sparkle) | Infrastruktur | Phase 6 |
 | Trends über Wochen | Historie im Store (SwiftData/SQLite) | Persistence-Protokolle |
+| Englische Oberfläche | String Catalogs je Package-Target, `Text(…, bundle: .module)` | alle UI-Targets |
 
 ---
 

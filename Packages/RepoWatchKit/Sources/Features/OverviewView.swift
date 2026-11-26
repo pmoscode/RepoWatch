@@ -42,6 +42,41 @@ struct OverviewView: View {
         let favorites = sorted(repositories.filter { model.settings.isFavorite($0.meta.nameWithOwner) })
         let others = sorted(repositories.filter { !model.settings.isFavorite($0.meta.nameWithOwner) })
 
+        VStack(spacing: 0) {
+            if !model.restrictedOrganizations.isEmpty {
+                restrictionBanner
+                Divider()
+            }
+            list(repositories: repositories, favorites: favorites, others: others)
+        }
+    }
+
+    /// Hinweis, wenn Organisationen RepoWatch sperren; deren Repos fehlen sonst ohne erkennbaren Grund.
+    private var restrictionBanner: some View {
+        let names = model.restrictedOrganizations.filter { !$0.isEmpty }
+        return HStack(alignment: .top, spacing: 8) {
+            Image(systemName: "lock.trianglebadge.exclamationmark")
+                .foregroundStyle(.orange)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(names.isEmpty
+                     ? String(localized: "Eine Organisation sperrt den Zugriff von RepoWatch.")
+                     : String(localized: "Gesperrt durch: \(names.formatted(.list(type: .and)))"))
+                    .font(.callout)
+                Text("Deren Repos fehlen, bis die Organisation RepoWatch freigibt.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Link("Zugriff anfragen …", destination: model.accessRequestURL)
+                    .font(.caption)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .background(Color.orange.opacity(0.1))
+    }
+
+    @ViewBuilder
+    private func list(repositories: [RepoSnapshot], favorites: [RepoSnapshot], others: [RepoSnapshot]) -> some View {
         if repositories.isEmpty {
             EmptyStateView("Keine Repositories", systemImage: "books.vertical",
                            message: context.searchText.isEmpty ? "Prüfe die Filter in den Einstellungen." : "Nichts passt zur Suche.")
@@ -119,6 +154,7 @@ struct OverviewView: View {
         .menuIndicator(.hidden)
         .fixedSize()
         .help("Sortieren")
+        .accessibilityLabel("Sortieren")
     }
 }
 

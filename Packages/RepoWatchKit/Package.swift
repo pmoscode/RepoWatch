@@ -64,6 +64,10 @@ let package = Package(
             resources: [.copy("Fixtures")]
         ),
         .testTarget(
+            name: "FeaturesTests",
+            dependencies: ["Features", "Domain", "ModuleUIKit", "TestSupport"]
+        ),
+        .testTarget(
             name: "PersistenceTests",
             dependencies: ["Persistence", "Domain", "TestSupport"]
         ),

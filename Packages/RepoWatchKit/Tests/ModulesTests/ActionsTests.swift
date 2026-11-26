@@ -169,3 +169,17 @@ struct ActionsModuleTests {
         #expect(module.changes(from: nil, to: red, repository: repo).isEmpty)
     }
 }
+
+@Suite("Actions: ausgeblendete Auslöser")
+struct IgnoredEventsTests {
+    @Test("Ausgeblendeter Auslöser löst keinen Alarm aus")
+    func ignoredEventDoesNotAlert() {
+        let ignored = SharedValue<Set<String>>([])
+        let module = ActionsModule(ignoredEvents: ignored, now: { t0 })
+        let context = ModuleContext(viewerLogin: "viewer", now: t0)
+        let graphUpdate = payload(head: nil, runs: [run(1, workflow: "Graph Update", outcome: .failure, minutesAgo: 5, event: "dynamic")])
+        #expect(module.summarize(graphUpdate, context: context).needsAttention)
+        ignored.value = ["dynamic"]
+        #expect(!module.summarize(graphUpdate, context: context).needsAttention)
+    }
+}

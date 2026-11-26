@@ -140,6 +140,7 @@ public actor SyncEngine {
             next.viewerLogin = inventory.viewerLogin
             next.inventoryFetchedAt = syncNow
             next.rateLimit = inventory.rateLimit
+            next.restrictedOrganizations = inventory.restrictedOrganizations.isEmpty ? nil : inventory.restrictedOrganizations
         }
 
         let tracked = Set(next.repositories.map(\.id))

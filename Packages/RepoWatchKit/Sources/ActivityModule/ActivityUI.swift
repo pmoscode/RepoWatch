@@ -17,9 +17,11 @@ public struct ActivityUI: ModuleUI {
     /// Stufen aller Repos relativ zueinander (Konzept 7).
     @MainActor
     public static func levels(in context: ModuleUIContext) -> [String: ActivityLevel] {
-        ActivityRanking.levels(for: Dictionary(uniqueKeysWithValues: context.repositories.map {
-            ($0.id, $0.payload(ActivityPayload.self, for: ActivityModule.id)?.score ?? 0)
-        }))
+        context.memo("activity.levels") {
+            ActivityRanking.levels(for: Dictionary(uniqueKeysWithValues: context.repositories.map {
+                ($0.id, $0.payload(ActivityPayload.self, for: ActivityModule.id)?.score ?? 0)
+            }))
+        }
     }
 
     public func rowBadge(for repository: RepoSnapshot, context: ModuleUIContext) -> AnyView? {

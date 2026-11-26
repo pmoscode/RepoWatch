@@ -12,6 +12,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         #if DEBUG
+        // `--appearance light|dark`: Erscheinungsbild für Snapshots erzwingen (vor dem Anlegen der Fenster).
+        let arguments = ProcessInfo.processInfo.arguments
+        if let index = arguments.firstIndex(of: "--appearance"), arguments.indices.contains(index + 1) {
+            NSApp.appearance = NSAppearance(named: arguments[index + 1] == "light" ? .aqua : .darkAqua)
+        }
+        #endif
+        #if DEBUG
         let configuration = AppConfiguration.live(allowEnvironmentToken: true)
         #else
         let configuration = AppConfiguration.live(allowEnvironmentToken: false)

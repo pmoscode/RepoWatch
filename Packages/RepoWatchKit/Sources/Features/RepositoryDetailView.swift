@@ -29,6 +29,7 @@ struct RepositoryDetailView: View {
                 }
                 .buttonStyle(.borderless)
                 .help(isFavorite ? "Aus Favoriten entfernen" : "Zu Favoriten")
+                .accessibilityLabel(isFavorite ? "Aus Favoriten entfernen" : "Zu Favoriten")
                 Button {
                     context.open(repository.meta.url)
                 } label: {

@@ -86,6 +86,7 @@ public struct PanelRootView: View {
                     }
                     .buttonStyle(.borderless)
                     .help("Suche schließen")
+                    .accessibilityLabel("Suche schließen")
                 }
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
@@ -98,6 +99,7 @@ public struct PanelRootView: View {
                 }
                 .buttonStyle(.borderless)
                 .help("Suchen (⌘F)")
+                .accessibilityLabel("Suchen")
             }
             if model.isSyncing {
                 ProgressView()
@@ -112,6 +114,7 @@ public struct PanelRootView: View {
             .buttonStyle(.borderless)
             .keyboardShortcut("r")
             .help("Aktualisieren (⌘R)")
+            .accessibilityLabel("Aktualisieren")
             .disabled(model.isSyncing)
             Button(action: onOpenSettings) {
                 Image(systemName: "gearshape")
@@ -119,6 +122,7 @@ public struct PanelRootView: View {
             .buttonStyle(.borderless)
             .keyboardShortcut(",")
             .help("Einstellungen (⌘,)")
+            .accessibilityLabel("Einstellungen")
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)

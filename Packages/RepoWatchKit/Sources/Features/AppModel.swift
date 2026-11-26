@@ -105,6 +105,8 @@ public final class AppModel {
     public var isDeviceFlowAvailable: Bool { deviceFlow != nil }
     /// Kontext für die Oberfläche der Module.
     public let ui: ModuleUIContext
+    /// Start bei Anmeldung.
+    public let loginItem = LoginItemController()
     /// Alle Modul-Oberflächen in fester Reihenfolge; `enabledModuleUIs` berücksichtigt die Einstellungen.
     public let moduleUIs: [any ModuleUI]
     /// Nur Debug-Builds: Reiter bzw. Repo, das das Panel beim Öffnen zeigt (`--tab`, `--repo`).
@@ -115,9 +117,11 @@ public final class AppModel {
     private let engine: SyncEngine
     private let scheduler: RefreshScheduler
     private let deviceFlow: DeviceFlowAuthenticator?
+    private let oauthClientID: String?
     private let seenStore: any SeenStateStore
     private let settingsStore: any SettingsStore
     private let authorRules: SharedValue<AuthorRules>
+    private let ignoredWorkflowEvents: SharedValue<Set<String>>
     private var signInTask: Task<Void, Never>?
     private var eventsTask: Task<Void, Never>?
     private var systemEvents: SystemEventsMonitor?
@@ -129,6 +133,8 @@ public final class AppModel {
         self.settings = settings
         authorRules = configuration.modules.authorRules
         authorRules.value = settings.authorRules
+        ignoredWorkflowEvents = configuration.modules.ignoredWorkflowEvents
+        ignoredWorkflowEvents.value = Set(settings.actionsHiddenEvents)
 
         var registry: ModuleRegistry
         do {
@@ -158,6 +164,7 @@ public final class AppModel {
             planner: RefreshPlanner(policy: Self.policy(from: settings), favorites: Set(settings.favorites))
         )
         deviceFlow = configuration.oauthClientID.map { DeviceFlowAuthenticator(clientID: $0) }
+        oauthClientID = configuration.oauthClientID
         seenStore = configuration.seenStateStore
         seenState = (try? seenStore.load()) ?? SeenState()
         moduleUIs = configuration.modules.userInterfaces()
@@ -373,6 +380,11 @@ public final class AppModel {
             authorRules.value = new.authorRules
             needsResync = true
         }
+        if new.actionsHiddenEvents != old.actionsHiddenEvents {
+            // Wirkt auf den Alarm erst nach der nächsten Zusammenfassung, also nach einem Sync.
+            ignoredWorkflowEvents.value = Set(new.actionsHiddenEvents)
+            needsResync = true
+        }
         let modulesChanged = new.disabledModules != old.disabledModules
         needsResync = needsResync || modulesChanged
         let favoritesChanged = new.favorites != old.favorites
@@ -411,6 +423,31 @@ public final class AppModel {
         policy.activeInterval = TimeInterval(max(1, settings.activeIntervalMinutes) * 60)
         policy.dormantInterval = TimeInterval(max(5, settings.dormantIntervalMinutes) * 60)
         return policy
+    }
+
+    #if DEBUG
+    /// Nur für SwiftUI-Previews: festen Stand anzeigen, ohne Token und ohne Sync.
+    public func loadPreview(_ state: SyncState) {
+        auth = .signedIn(login: state.viewerLogin, kind: .personalAccessToken)
+        syncState = state
+    }
+    #endif
+
+    // MARK: Gesperrte Organisationen
+
+    /// Organisationen, die RepoWatch per OAuth-Zugriffsbeschränkung sperren (Konzept 5).
+    public var restrictedOrganizations: [String] {
+        syncState?.restrictedOrganizations ?? []
+    }
+
+    /// Wo sich der Zugriff anfragen lässt: bei OAuth die App-Seite in den GitHub-Einstellungen
+    /// (dort „Request“/„Grant“ je Organisation), sonst die Erklärung von GitHub.
+    public var accessRequestURL: URL {
+        if case .signedIn(_, .oauth) = auth, let oauthClientID,
+           let url = URL(string: "https://github.com/settings/connections/applications/\(oauthClientID)") {
+            return url
+        }
+        return URL(string: "https://docs.github.com/en/organizations/managing-oauth-access-to-your-organizations-data/about-oauth-app-access-restrictions")!
     }
 
     // MARK: Neu und Menüleiste

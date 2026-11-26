@@ -195,7 +195,7 @@ private struct ActionsSettings: View {
             Section("Actions-Reiter") {
                 Toggle("Fehlschläge auf allen Branches zeigen", isOn: setting(model, \.actionsShowAllBranches))
                 Toggle("Runs aus Bot-PRs ausblenden", isOn: setting(model, \.actionsHideBotRuns))
-                LinesField(title: "Auslöser ausblenden", prompt: "schedule",
+                LinesField(title: "Auslöser ausblenden (Reiter und Alarm), z. B. dynamic für GitHubs eigene Läufe", prompt: "dynamic",
                            lines: model.settings.actionsHiddenEvents) { lines in
                     model.updateSettings { $0.actionsHiddenEvents = lines }
                 }
@@ -259,15 +259,36 @@ private struct GeneralSettings: View {
     let model: AppModel
 
     var body: some View {
+        let loginItem = model.loginItem
         Form {
-            Picker("Menüleiste zeigt", selection: setting(model, \.menuBarMode)) {
-                Text("Nur das Symbol").tag(AppSettings.MenuBarMode.none)
-                Text("Punkt bei Neuem").tag(AppSettings.MenuBarMode.newItemsDot)
-                Text("Offene PRs von Menschen").tag(AppSettings.MenuBarMode.personPullRequests)
-                Text("Summe offener Issues und PRs").tag(AppSettings.MenuBarMode.openItems)
+            Section {
+                Toggle("Bei Anmeldung starten", isOn: Binding(
+                    get: { loginItem.isEnabled },
+                    set: { loginItem.setEnabled($0) }
+                ))
+                if loginItem.requiresApproval {
+                    HStack {
+                        Text("macOS muss den Start noch erlauben.")
+                            .font(.caption).foregroundStyle(.secondary)
+                        Spacer()
+                        Button("Anmeldeobjekte öffnen …") { loginItem.openSystemSettings() }
+                    }
+                }
+                if let error = loginItem.lastError {
+                    Text(error).font(.caption).foregroundStyle(.orange)
+                }
             }
-            .pickerStyle(.radioGroup)
+            Section {
+                Picker("Menüleiste zeigt", selection: setting(model, \.menuBarMode)) {
+                    Text("Nur das Symbol").tag(AppSettings.MenuBarMode.none)
+                    Text("Punkt bei Neuem").tag(AppSettings.MenuBarMode.newItemsDot)
+                    Text("Offene PRs von Menschen").tag(AppSettings.MenuBarMode.personPullRequests)
+                    Text("Summe offener Issues und PRs").tag(AppSettings.MenuBarMode.openItems)
+                }
+                .pickerStyle(.radioGroup)
+            }
         }
         .formStyle(.grouped)
+        .onAppear { loginItem.refresh() }
     }
 }
