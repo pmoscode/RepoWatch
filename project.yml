@@ -1,0 +1,59 @@
+name: RepoWatch
+options:
+  bundleIdPrefix: de.pmoscode
+  deploymentTarget:
+    macOS: "26.0"
+  createIntermediateGroups: true
+  developmentLanguage: de
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+
+packages:
+  RepoWatchKit:
+    path: Packages/RepoWatchKit
+
+targets:
+  RepoWatch:
+    type: application
+    platform: macOS
+    sources:
+      - path: App
+    dependencies:
+      - package: RepoWatchKit
+        product: RepoWatchKit
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: RepoWatch
+        LSUIElement: true
+        LSApplicationCategoryType: public.app-category.developer-tools
+        NSHumanReadableCopyright: ""
+    entitlements:
+      path: App/RepoWatch.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.network.client: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: de.pmoscode.repowatch
+        PRODUCT_NAME: RepoWatch
+        ENABLE_HARDENED_RUNTIME: YES
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "-"
+        COMBINE_HIDPI_IMAGES: YES
+
+schemes:
+  RepoWatch:
+    build:
+      targets:
+        RepoWatch: all
+    run:
+      config: Debug
+    test:
+      config: Debug
